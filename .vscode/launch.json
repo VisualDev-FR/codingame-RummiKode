@@ -1,0 +1,11 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Launch SkeletonMain",
+            "request": "launch",
+            "mainClass": "SkeletonMain",
+            "projectName": "skeleton"
+        }
+    ]
+}
