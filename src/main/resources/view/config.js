@@ -4,3 +4,14 @@ import { GraphicEntityModule } from './entity-module/GraphicEntityModule.js';
 export const modules = [
 	GraphicEntityModule
 ];
+
+export const playerColors = [
+	'#3c9fc5', // Green Circle light blue
+	'#ff862d', // Green Circle light orange
+	'#de6ddf', // lavender pink
+	'#6ac371', // mantis green
+]
+
+export const gameName = 'RummiKode'
+
+export const stepByStepAnimateSpeed = 3

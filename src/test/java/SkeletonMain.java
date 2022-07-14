@@ -8,8 +8,7 @@ public class SkeletonMain {
         gameRunner.addAgent(Agent1.class);
         gameRunner.addAgent(Agent2.class);
 
-        // Another way to add a player
-        // gameRunner.addAgent("python3 /home/user/player.py");
+        //gameRunner.setSeed(6335831626512785165L);
 
         gameRunner.start();
     }

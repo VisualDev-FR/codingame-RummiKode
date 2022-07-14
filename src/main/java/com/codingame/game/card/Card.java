@@ -1,9 +1,9 @@
-package com.codingame.game;
+package com.codingame.game.card;
 
 public class Card{
 
-    CardColors color;
-    int number;
+    public CardColors color;
+    public int number;
 
     public Card(CardColors color_, int number_){
         this.color = color_;
@@ -19,7 +19,7 @@ public class Card{
     }
 
     public String getHashCode(){
-        return String.format("%s_%s", this.color.toString(), this.number);
+        return String.format("%s_%s", this.number, this.color.toString());
     }
 
     public String toString(){

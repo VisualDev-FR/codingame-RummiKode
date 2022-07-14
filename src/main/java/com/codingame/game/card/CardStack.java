@@ -1,4 +1,4 @@
-package com.codingame.game;
+package com.codingame.game.card;
 
 import java.util.*;
 
@@ -20,9 +20,5 @@ public class CardStack{
         }
 
         return sum;
-    }
-
-    public int cardsCount(){
-        return cards.size();
     }
 }

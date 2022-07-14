@@ -1,11 +1,11 @@
-package com.codingame.game;
+package com.codingame.game.card;
 
 public class StackColor extends CardStack{
 
     final int MAX_STACK_LENGHT = 4;
 
     int stackNumber;
-    boolean[] colors;    
+    boolean[] colors;
 
     public StackColor(int number){
         this.stackNumber = number;
@@ -24,14 +24,4 @@ public class StackColor extends CardStack{
             return false;
         }
     }
-
-    public boolean remove(Card card){
-
-        if(this.cards.size() > 3){
-            
-        }
-
-        return false;
-    }
-
 }

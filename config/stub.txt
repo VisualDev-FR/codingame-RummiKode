@@ -1,0 +1,4 @@
+read playersCount:int
+gameloop
+read cardsInHand:string(256)
+loop playersCount read playerScore:int

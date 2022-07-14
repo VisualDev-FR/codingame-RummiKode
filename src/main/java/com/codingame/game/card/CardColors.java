@@ -1,3 +1,3 @@
-package com.codingame.game;
+package com.codingame.game.card;
 
 public enum CardColors{ BLACK, GREEN, BLUE, YELLOW }

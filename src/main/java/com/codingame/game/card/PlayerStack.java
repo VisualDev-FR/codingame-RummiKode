@@ -1,4 +1,4 @@
-package com.codingame.game;
+package com.codingame.game.card;
 
 public class PlayerStack extends CardStack{
     
