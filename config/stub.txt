@@ -1,4 +1,16 @@
-read playersCount:int
 gameloop
 read cardsInHand:string(256)
+read playersCount:int
 loop playersCount read playerScore:int
+read stackCount:int
+loop stackCount read stack:string(256)
+write WAIT
+
+OUTPUT
+WAIT 
+TAKE <stackID> <cardCode>
+ADD <stackID> <cardCode>
+PUSH <cardCode1>, <cardCode2>...
+SPLIT <cardCode_1> <cardCode_2>
+JOIN <stackID_1> <stackID_2>
+MOVE <stackID_From> <stackID_To> <cardCodeFrom>

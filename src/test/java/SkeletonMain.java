@@ -5,8 +5,8 @@ public class SkeletonMain {
 
         MultiplayerGameRunner gameRunner = new MultiplayerGameRunner();
 
-        gameRunner.addAgent(Agent1.class);
-        gameRunner.addAgent(Agent2.class);
+        gameRunner.addAgent(Solution.class);
+        gameRunner.addAgent(Solution.class);
 
         //gameRunner.setSeed(6335831626512785165L);
 

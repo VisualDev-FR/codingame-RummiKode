@@ -2,8 +2,10 @@ package com.codingame.view;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import com.codingame.game.card.*;
+import com.codingame.game.stack.*;
 
 
 import com.codingame.gameengine.module.entities.*;
@@ -46,7 +48,7 @@ public class View {
 
         DisplayBackGround();
 
-        StackSequence sequence = new StackSequence(CardColors.BLUE, 0, 12);
+        //StackSequence sequence = new StackSequence(0, CardColors.BLUE, 0, 12);
     }
 
     public void MoveStack(){
@@ -146,11 +148,11 @@ public class View {
         .setFillColor(DRAW_COLOR);
     }
 
-    public void addInDraw(List<Card> cards){
+    public void addInDraw(Map<String, Card> cards){
 
         System.err.println("drawSize = " + cards.size());
         
-        for(Card card : cards){
+        for(Card card : cards.values()){
 
             int[] emptyCell = getVerticalEmptySpace(1, draw);
 

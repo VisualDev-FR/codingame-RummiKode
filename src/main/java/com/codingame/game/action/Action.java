@@ -1,5 +1,5 @@
 package com.codingame.game.action;
 
 public enum Action {
-    DRAW, SPLIT, TAKE, PUSH
+    WAIT, TAKE, ADD, PUSH, SPLIT, JOIN, MOVE
 }

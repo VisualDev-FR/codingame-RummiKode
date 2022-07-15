@@ -1,4 +1,4 @@
-package com.codingame.game;
+package com.codingame.game.Config;
 
 import java.util.Properties;
 import java.util.function.Function;
@@ -12,8 +12,9 @@ public class Config {
     public static int CARDS_COUNT_TO_LOSE = 48;
     public static int MIN_SUM_TO_START = 20;
     public static int PLAYERS_COUNT = 2;
+    public static int ACTIONS_PER_PLAYER = 5;
 
-    // greenCircle config
+    // GreenCircle config
     
     public static int ZONES_COUNT = 8;
     public static int CARDS_TO_DRAW = 4;

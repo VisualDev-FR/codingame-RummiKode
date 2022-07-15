@@ -2,16 +2,34 @@ package com.codingame.game.card;
 
 public class Card{
 
-    public CardColors color;
-    public int number;
+    protected CardColors color;
+    protected int number;
+    protected boolean isBonus;
 
     public Card(CardColors color_, int number_){
         this.color = color_;
         this.number = number_;
+        this.isBonus = number_ == 13;
+    }
+
+    public Card(){
+        // Constructor created for BonusCard.java inherit        
     }
 
     public Card clone(){
         return new Card(this.color, this.number);
+    }
+
+    public CardColors getColor(){
+        return this.color;
+    }
+
+    public int getNumber(){
+        return this.number;
+    }
+
+    public boolean isBonus(){
+        return isBonus;
     }
 
     public String getImage(){

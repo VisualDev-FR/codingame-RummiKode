@@ -1,18 +1,23 @@
 package com.codingame.game;
-import java.util.List;
 import java.util.Properties;
 
-import com.codingame.gameengine.core.AbstractPlayer.TimeoutException;
+import com.codingame.game.Config.Config;
+import com.codingame.game.Summary.GameSummaryManager;
 import com.codingame.gameengine.core.AbstractReferee;
 import com.codingame.gameengine.core.MultiplayerGameManager;
 import com.google.inject.Inject;
 
 public class Referee extends AbstractReferee {
 
+    @Inject private GameSummaryManager gameSummaryManager;
     @Inject private MultiplayerGameManager<Player> gameManager;
     @Inject private Game game;
     
     private static final int MAX_TURNS = 200;
+
+    private int activePlayerId;
+
+    final boolean PERFORM_UPDATE = false;
 
     int maxFrames;
     boolean gameOverFrame;    
@@ -22,6 +27,7 @@ public class Referee extends AbstractReferee {
 
         // Set configuration depending on game rules:
         //Config.setDefaultValueByLevel(LeagueRules.fromIndex(gameManager.getLeagueLevel()));
+        activePlayerId = 0;
 
         // Override configuration with game parameters:
         if (System.getProperty("allow.config.override") != null) {
@@ -49,22 +55,42 @@ public class Referee extends AbstractReferee {
     @Override
     public void gameTurn(int turn){
 
-/*         for (Player player : gameManager.getActivePlayers()) {
-            for (String line : game.getCurrentFrameInfoFor(player)) {
-                player.sendInputLine(line);
-            }
-            
-            player.execute();
+        if(!PERFORM_UPDATE) return;
+
+        Player player = gameManager.getPlayer(activePlayerId);
+        for (String line : game.getCurrentFrameInfoFor(player)) {
+            player.sendInputLine(line);
         }
 
-        for (Player player : gameManager.getActivePlayers()) {
-            try {
-                List<String> outputs = player.getOutputs();
-                // Check validity of the player output and compute the new game state
-            } catch (TimeoutException e) {
-                player.deactivate(String.format("$%d timeout!", player.getIndex()));
+        player.execute();
+
+        setNextAction(player);
+        
+/*         try {
+            if (player.isActive()) {
+                game.performGameUpdate(player);
             }
-        }  */       
+        } catch (TimeoutException e) {
+            commandManager.deactivatePlayer(player, "Timeout!");
+            gameSummaryManager.addPlayerTimeout(player);
+            gameSummaryManager.addPlayerDisqualified(player);
+        } catch (Exception e) {
+            commandManager.deactivatePlayer(player, e.getMessage());
+            gameSummaryManager.addPlayerTimeout(player);
+            gameSummaryManager.addPlayerDisqualified(player);
+        } 
+        
+        setNextPhase(player);
+        gameManager.addToGameSummary(gameSummaryManager.getSummary());
+
+        view.refreshCards(game);
+        view.refreshApplications(game);
+        view.refreshPlayersTooltips(game);
+
+        if (game.isGameOver()) {
+            gameOverFrame = true;
+        }
+        */
     }
 
     private void abort() {
@@ -83,4 +109,24 @@ public class Referee extends AbstractReferee {
             }
         }
     }
+
+    private void setNextAction(Player activePlayer){
+        if(!activePlayer.canPlay(game)) switchToNextPlayer(activePlayer);
+    }
+
+    private void switchToNextPlayer(Player player) {
+
+        if(player.hasToDraw()){
+            player.drawCard(game);
+            gameSummaryManager.addDrawCard(player);
+        }
+
+        // move to next player
+
+        activePlayerId = (activePlayerId + 1) % gameManager.getPlayerCount();
+        gameManager.getPlayer(activePlayerId).reset();
+        if(game.isLastTurn()) {
+            gameOverFrame = true;
+        }
+    }    
 }
