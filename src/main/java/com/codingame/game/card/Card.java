@@ -9,15 +9,31 @@ public class Card{
     public Card(CardColors color_, int number_){
         this.color = color_;
         this.number = number_;
-        this.isBonus = number_ == 13;
+        this.isBonus = false;
     }
 
-    public Card(){
-        // Constructor created for BonusCard.java inherit        
+    public Card(CardColors cardColor){
+        this.color = cardColor;
+        this.number = -1;
+        this.isBonus = true;
     }
 
-    public Card clone(){
-        return new Card(this.color, this.number);
+    public void setBonusNumber(int bonusNumber) throws Exception{
+
+        if(this.isBonus()){
+            this.number = bonusNumber;
+        }else{
+            throw new Exception(String.format("Card.setBonus() : The card %s is not a bonusCard", this.getHashCode()));
+        }
+    }
+
+    public void resetBonus() throws Exception{
+
+        if(this.isBonus()){
+            this.number = -1;
+        }else{
+            throw new Exception(String.format("Card.resetBonus() : The card %s is not a bonusCard", this.getHashCode()));
+        }
     }
 
     public CardColors getColor(){
@@ -33,11 +49,11 @@ public class Card{
     }
 
     public String getImage(){
-        return String.format("%s_%s.png", this.color.toString().toLowerCase(), number == 13 ? "none" : number);
+        return String.format("%s_%s.png", this.color.toString().toLowerCase(), this.isBonus() ? "none" : number);
     }
 
     public String getHashCode(){
-        return String.format("%s_%s", this.number, this.color.toString());
+        return String.format("%02d_%s", this.number, this.color.toString());
     }
 
     public String toString(){

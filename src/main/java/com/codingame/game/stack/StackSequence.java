@@ -1,9 +1,10 @@
 package com.codingame.game.stack;
 
+import com.codingame.game.Config.Config;
 import com.codingame.game.card.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.TreeMap;
 
 public class StackSequence extends CardStack{
 
@@ -11,131 +12,195 @@ public class StackSequence extends CardStack{
     private int sequenceStart;
     private int sequenceEnd;
 
-
-    public StackSequence(int stackID, CardColors color, int start, int end){
-        
-        this.cards = new HashMap<String, Card>();
-        this.ID = stackID;
-        this.type = StackType.SEQUENCE;
-        this.stackColor = color;
-        this.sequenceStart = start;
-        this.sequenceEnd = end;
-
-        for(int cardID = start; cardID <= end; cardID++){
-            Card newCard = new Card(color, cardID);
-            this.addIfBonus(newCard);
-            this.cards.put(newCard.getHashCode(), newCard);
-        }
-    }
-
     public StackSequence(int stackID, List<Card> cards){
         
-        this.cards = new HashMap<String, Card>();
+        this.cards = new TreeMap<String, Card>();
         this.ID = stackID;
         this.type = StackType.SEQUENCE;
         this.stackColor = cards.get(0).getColor();
-        this.sequenceStart = 15;
-        this.sequenceEnd = 0;
+        this.sequenceStart = 99;
+        this.sequenceEnd = -1;
 
         for(Card card : cards){
 
-            this.addIfBonus(card);
+            //this.addIfBonus(card);
             this.cards.put(card.getHashCode(), card);
             this.sequenceStart = Math.min(this.sequenceStart, card.getNumber());
             this.sequenceEnd = Math.max(this.sequenceEnd, card.getNumber());
         }
     }
 
-    public StackSequence merge(StackSequence sequence){
+    public boolean isValid(){
 
-        int start = Math.min(this.sequenceStart, sequence.sequenceStart);
-        int end = Math.max(this.sequenceEnd, sequence.sequenceEnd);
+        // TODO: delete this function, is is already computed in the referee class
 
-        return new StackSequence(this.ID, this.stackColor, start, end);
+        List<Card> cards = new ArrayList<Card>(this.cards.values());
+        
+        for (int i = 0; i < cards.size() - 1; i++){
+            
+            boolean checkSequence = cards.get(i + 1).getNumber() == (cards.get(i).getNumber() + 1);
+            boolean checkColor = cards.get(i).getColor() == cards.get(i + 1).getColor();
+
+            if(!checkSequence || !checkColor) return false;
+        }
+
+        return cards.size() >= Config.MIN_CARDS_TO_SPLIT;
+    }
+
+    public List<Card> getTakableCards(){
+
+        List<Card> takableCards = new ArrayList<Card>();
+
+        if(this.cardsCount() > 3){
+            takableCards.add(new ArrayList<Card>(this.cards.values()).get(0));
+            for(int i = 3; i < this.cardsCount() - 3; i++){
+                takableCards.add(new ArrayList<Card>(this.cards.values()).get(i));
+            }            
+            takableCards.add(new ArrayList<Card>(this.cards.values()).get(this.cardsCount() - 1));
+        }
+
+        return takableCards;
+    }
+
+    public StackSequence mergeWith(StackSequence sequence){
+
+        TreeMap<String, Card> newCards = new TreeMap<String, Card>();
+
+        newCards.putAll(this.cards);
+        newCards.putAll(sequence.getCards());
+
+        return new StackSequence(this.ID, new ArrayList<Card>(newCards.values()));
     }
     
-    public boolean addCard(Card card) throws Exception{
+    public void addCard(Card card){
 
-        if(card.isBonus()){
-            // TODO: compute what we are supposed to do in this case
-            return true;
-
-        }else if(card.getNumber() == sequenceEnd + 1){
-            this.addIfBonus(card);
-            this.sequenceEnd = card.getNumber();
-            this.cards.put(card.getHashCode(), card);
-            return true;
-
-        }else if(card.getNumber() == sequenceStart - 1){
-            this.addIfBonus(card);
-            this.sequenceStart = card.getNumber();
-            this.cards.put(card.getHashCode(), card);
-            return true;
-
-        }else{
-            throw new Exception(String.format("StackSequence.addCard : the card %s cannot be added to the stack", card.getHashCode()));
-        }
+        this.sequenceStart = Math.min(this.sequenceStart, card.getNumber());
+        this.sequenceEnd = Math.max(this.sequenceEnd, card.getNumber());
+        this.cards.put(card.getHashCode(), card);
     }
 
-    public StackSequence[] split(int newID, int card1, int card2){
+    public StackSequence[] split(int newID, int card_1, int card_2){
+
+        int card1 = -1;
+        int card2 = -1;
+
+        if(card_1 < card_2){
+            card1 = card_1;
+            card2 = card_2;
+        }else{
+            card1 = card_2;
+            card2 = card_1;
+        }
 
         if(card1 - sequenceStart >= 3 && sequenceEnd - card2 >= 3){
 
-            StackSequence sequence_1 = new StackSequence(this.ID, stackColor, sequenceStart, card1);
-            StackSequence sequence_2 = new StackSequence(newID, stackColor, card2, sequenceEnd);
+            List<Card> cards_1 = new ArrayList<Card>();
+            List<Card> cards_2 = new ArrayList<Card>();
+
+            for(Card card : this.cards.values()){
+                if(card.getNumber() <= card1){
+                    cards_1.add(card);
+                }else if(card.getNumber() >= card2){
+                    cards_2.add(card);
+                }
+            }            
+
+            StackSequence sequence_1 = new StackSequence(this.ID, cards_1);
+            StackSequence sequence_2 = new StackSequence(newID, cards_2);
 
             return new StackSequence[]{sequence_1, sequence_2};
 
         }else{
+            assert false : "";
             return null;
         }
     }
 
-    public List<StackSequence> remove(int newID, Card card) throws Exception{
+    public List<StackSequence> remove(int newID, Card cardToRemove){
 
         List<StackSequence> newSequences = new ArrayList<StackSequence>();
 
-        if(card.getNumber() > sequenceStart && card.getNumber() < sequenceEnd){
+        if(cardToRemove.getNumber() > sequenceStart && cardToRemove.getNumber() < sequenceEnd){
 
             // is the card to remove, contained into the cardSequence ?
 
-            newSequences.add(new StackSequence(this.ID, this.stackColor, sequenceStart, card.getNumber() - 1));
-            newSequences.add(new StackSequence(newID, this.stackColor, card.getNumber() + 1, sequenceEnd));
-            this.removeIfBonus(card);
-        
-        }else if(card.getNumber() == sequenceStart){
+            List<Card> cards_1 = new ArrayList<Card>();
+            List<Card> cards_2 = new ArrayList<Card>();
+
+            for(Card card : this.cards.values()){
+                if(card.getNumber() < cardToRemove.getNumber()){
+                    cards_1.add(card);
+                }else if(card.getNumber() > cardToRemove.getNumber()){
+                    cards_2.add(card);
+                }
+            }            
+
+            newSequences.add(new StackSequence(this.ID, cards_1));
+            newSequences.add(new StackSequence(newID, cards_2));
+
+        }else if(cardToRemove.getNumber() == sequenceStart){
 
             // is the card to remove at the start of the sequence ?
+            
+            List<Card> newCards = new ArrayList<Card>();
 
-            newSequences.add(new StackSequence(this.ID, this.stackColor, card.getNumber() + 1, sequenceEnd));
-            this.removeIfBonus(card);
-        
-        }else if(card.getNumber() == sequenceEnd){
+            for(Card card : this.cards.values()){
+                if(card.getNumber() > sequenceStart){
+                    newCards.add(card);
+                }
+            }
+
+            newSequences.add(new StackSequence(this.ID, newCards));
+
+        }else if(cardToRemove.getNumber() == sequenceEnd){
 
             // is the card to remove at the end of the sequence ?
 
-            newSequences.add(new StackSequence(this.ID, this.stackColor, sequenceStart, card.getNumber() - 1));
-            this.removeIfBonus(card);
-        
+            List<Card> newCards = new ArrayList<Card>();
+
+            for(Card card : this.cards.values()){
+                if(card.getNumber() < sequenceEnd){
+                    newCards.add(card);
+                }
+            }
+
+            newSequences.add(new StackSequence(this.ID, newCards));
+
         }else{
-            throw new Exception(String.format("StackSequence.remove : the card %s is not contained in the sequence", card.getHashCode()));
+            //throw new Exception(String.format("StackSequence.remove : the card %s is not contained in the sequence", cardToRemove.getHashCode()));
+            assert false : String.format("StackSequence.remove : the card %s is not contained in the sequence", cardToRemove.getHashCode());
         }
         
 
         return newSequences;            
     }
-    
-    public Card getCard(int index){
-
-        if(index >= 0 && index + sequenceStart <= sequenceEnd){
-            return new Card(stackColor, index + sequenceStart);
-        }else{
-            return null;
-        }
-    }
 
     public boolean canAdd(Card card){
         return card.getColor() == this.stackColor && (card.getNumber() == this.sequenceStart - 1 || card.getNumber() == this.sequenceEnd + 1 || card.isBonus());
+    }
+
+    public boolean canRemove(Card card){
+        
+        boolean canRemove = false;
+        int minCards = Config.MIN_CARDS_TO_SPLIT;
+        
+        if(card.getNumber() > this.sequenceStart && card.getNumber() < this.sequenceEnd){
+
+            // if the cardNumber is between two sequence bounds, the card can only be removed if the two new stacks contain at least <Config.MIN_CARDS_TO_SPLIT> cards
+            
+            canRemove = card.getNumber() - this.sequenceStart > minCards && this.sequenceEnd - card.getNumber() > minCards; 
+        
+        }else if(card.getNumber() == this.sequenceStart || card.getNumber() == this.sequenceEnd){
+
+            // if the cardNumber equals one of the two bounds of the stack, the card can only be removed if the cardsCount is greater than <Config.MIN_CARDS_TO_SPLIT>  
+
+            canRemove = this.cardsCount() > minCards;
+
+        }
+
+        // else, it means that the card is not into the stack, so we return false
+
+        return canRemove;
     }
 
     public int getFirstNumber(){

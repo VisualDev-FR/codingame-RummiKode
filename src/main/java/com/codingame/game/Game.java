@@ -5,13 +5,21 @@ import java.util.*;
 import com.codingame.gameengine.core.MultiplayerGameManager;
 import com.codingame.view.View;
 import com.google.inject.Inject;
-import com.codingame.game.action.Action;
+import com.codingame.game.Config.Config;
+import com.codingame.game.Summary.GameSummaryManager;
+import com.codingame.game.action.AddAction;
+import com.codingame.game.action.JoinAction;
+import com.codingame.game.action.MoveAction;
+import com.codingame.game.action.PushAction;
+import com.codingame.game.action.SplitAction;
+import com.codingame.game.action.TakeAction;
 import com.codingame.game.card.*;
 import com.codingame.game.stack.*;
 
 
 public class Game {
 
+    @Inject private GameSummaryManager gameSummaryManager;
     @Inject private MultiplayerGameManager<Player> gameManager;
     @Inject private View view;
 
@@ -42,7 +50,7 @@ public class Game {
 
         view.addInDraw(gameManager.getActivePlayers().get(0).getCards());
 
-        System.err.println("drawCount = " + drawCards.size());
+        //System.err.println("drawCount = " + drawCards.size());
     }
 
     public boolean isLastTurn() {
@@ -57,10 +65,9 @@ public class Game {
         
         List<String> lines = new ArrayList<>();
 
-        String[] cards = (String[]) player.getCards().keySet().toArray();
-
+        
+        lines.add(String.join(" ", player.getCards().keySet())); // cardsInHand
         lines.add(Integer.toString(gameManager.getPlayerCount())); // playersCount
-        lines.add(String.join(" ", cards)); // cardsInHand
         
         for(int i = 0; i < gameManager.getPlayerCount(); i++){
             lines.add(Integer.toString(gameManager.getPlayers().get(i).getScore())); // playerScores
@@ -88,44 +95,39 @@ public class Game {
 
         drawCards = new Stack<Card>();
 
-        Stack<Card> drawTemp = new Stack<Card>();
+        // we had two cards of each in common draw
         
         for(CardColors color : CardColors.values()){
 
             for(int i = 0; i < 13; i++){
         
-                drawTemp.add(new Card(color, i));
-                drawTemp.add(new Card(color, i));
+                drawCards.add(new Card(color, i));
+                drawCards.add(new Card(color, i));
             }
         }
 
-        List<CardColors> bonusColors = Arrays.asList(CardColors.values());
+        if(!Config.ENABLE_BONUS) return;
 
-        int indexBonus_1 = random.nextInt(bonusColors.size() - 1);
+        // we search two random colors to add them in the common draw
+
+        CardColors[] bonusColors = CardColors.values();
+
+        int indexBonus_1 = random.nextInt(bonusColors.length - 1);
         int indexBonus_2 = indexBonus_1;
 
         while(indexBonus_1 == indexBonus_2){
-            indexBonus_2 = random.nextInt(bonusColors.size());
+            indexBonus_2 = random.nextInt(bonusColors.length);
         }
 
-        drawTemp.add(new Card(bonusColors.get(indexBonus_1), 13));
-        drawTemp.add(new Card(bonusColors.get(indexBonus_2), 13));
+        // we had two random-color bonus to the common draw
 
-        while(drawTemp.size() > 0){
-
-            int cardIndex = random.nextInt(drawTemp.size());
-
-            drawCards.push(drawTemp.get(cardIndex));
-            drawTemp.remove(cardIndex);
-        }
-
-
+        drawCards.add(new Card(bonusColors[indexBonus_1]));
+        drawCards.add(new Card(bonusColors[indexBonus_2]));
     }
 
     public Card drawCard(){
 
         Card card = drawCards.get(random.nextInt(drawCards.size()));
-
         drawCards.remove(card);
 
         return card; 
@@ -143,39 +145,80 @@ public class Game {
         }
     }
 
+    public boolean isGameOver() {
+        // one player is deactivated
+        List<Player> activePlayers = gameManager.getActivePlayers();
+        if (activePlayers.size() <= 1) {
+            return true;
+        }
+
+        return false;
+        //TODO: the game isn't over if a player can still improve its rank
+        //return gameManager.getActivePlayers().stream().noneMatch(this::canImproveRanking);
+    }    
+
     // PLAYING FUNCTIONS
 
-    public void WAIT(Player player){
-        player.setAction(Action.WAIT);
-    }
+    public void performGameUpdate(Player player){
 
-    public void TAKE(Player player, int stackID, Card cardToTake) throws Exception{
+        //view.startOfTurn();
+        //view.setPlayerMessage(player);        
+                 
+        if (player.getAction().isMove()) {
+            MOVE(player, (MoveAction) player.getAction());
+        }
+        else if (player.getAction().isTake()) {
+            TAKE(player, (TakeAction) player.getAction());
+        }
+        else if (player.getAction().isAdd()) {
+            ADD(player, (AddAction) player.getAction());
+        }
+        else if (player.getAction().isPush()) {
+            PUSH(player, (PushAction) player.getAction());
+        }
+        else if (player.getAction().isSplit()) {
+            SPLIT(player, (SplitAction) player.getAction());
+        }
+        else if (player.getAction().isJoin()) {
+            JOIN(player, (JoinAction) player.getAction());
+        }        
+        else if (player.getAction().isWait()) {
+            gameSummaryManager.wait(player);
+            player.setLeftActions(0);
+        }
 
-        player.setAction(Action.TAKE);
+        player.setScore(player.getCards().size());
 
-        removeCardFromStack(stackID, cardToTake);
+        // update view
+        //view.endOfTurn();
+    }    
+
+    public void TAKE(Player player, TakeAction takeAction){
+
+        removeCardFromStack(takeAction.getStackID(), takeAction.getCardToTake());
         
-        player.addCardInHand(cardToTake);
+        player.addCardInHand(takeAction.getCardToTake());
         player.removeOnePlay();
     }
 
-    public void ADD(Player player, int stackID, Card cardToAdd) throws Exception{
+    public void ADD(Player player, AddAction addAction){
         
-        player.setAction(Action.TAKE);
-        player.removeCardInHand(cardToAdd);
+        player.removeCardInHand(addAction.getCardToAdd());
 
-        StackType type = stacks.get(stackID);        
+        StackType type = stacks.get(addAction.getStackID());        
 
         if(type == StackType.SEQUENCE){
-            sequenceStacks.get(stackID).addCard(cardToAdd);
+            sequenceStacks.get(addAction.getStackID()).addCard(addAction.getCardToAdd());
         }else{
-            colorStacks.get(stackID).addCard(cardToAdd);
+            colorStacks.get(addAction.getStackID()).addCard(addAction.getCardToAdd());
         }
     }
 
-    public void PUSH(Player player, List<Card> cards, StackType type){
+    public void PUSH(Player player, PushAction pushAction){
 
-        player.setAction(Action.PUSH);
+        List<Card> cards = pushAction.getCards();
+        StackType type = pushAction.getType();
+
         player.removeCardInHand(cards);
 
         int stackID = getFreeStackID();
@@ -193,16 +236,19 @@ public class Game {
         }
     }
 
-    public void SPLIT(Player player, int stackID, Card card1, Card card2){
+    public void SPLIT(Player player, SplitAction splitAction){
 
-        //TODO: implémenter la fonction
-        player.setAction(Action.SPLIT);
-        
+        int stackID = splitAction.getStackID();
+        Card card1 = splitAction.getCard1();
+        Card card2 = splitAction.getCard2();
+
+        this.sequenceStacks.get(stackID).split(getFreeStackID(), card1.getNumber(), card2.getNumber());
     }
 
-    public void JOIN(Player player, int stackID_1, int stackID_2){
+    public void JOIN(Player player, JoinAction joinAction){
 
-        player.setAction(Action.JOIN);
+        int stackID_1 = joinAction.getStackID_1();
+        int stackID_2 = joinAction.getStackID_2();
         
         StackSequence stack_1 = sequenceStacks.get(stackID_1);
         StackSequence stack_2 = sequenceStacks.get(stackID_2);
@@ -213,23 +259,21 @@ public class Game {
         sequenceStacks.remove(stackID_1);
         sequenceStacks.remove(stackID_2);
 
-        StackSequence mergedStack = stack_1.merge(stack_2);
+        StackSequence mergedStack = stack_1.mergeWith(stack_2);
 
         stacks.put(mergedStack.getID(), StackType.SEQUENCE);
         sequenceStacks.put(mergedStack.getID(), mergedStack);
     }
 
-    public void MOVE(Player player, int stackID_From, int stackID_To, Card card) throws Exception{
+    public void MOVE(Player player, MoveAction moveAction){
 
-        player.setAction(Action.MOVE);
-
-        removeCardFromStack(stackID_From, card);
-        addCardInStack(stackID_To, card);        
+        removeCardFromStack(moveAction.getStackID_From(), moveAction.getCardToMove());
+        addCardInStack(moveAction.getStackID_To(), moveAction.getCardToMove());        
     }
 
     // STACKS HANDLING
 
-    public void removeCardFromStack(int stackID, Card card) throws Exception{
+    public void removeCardFromStack(int stackID, Card card){
 
         if(stacks.get(stackID) == StackType.SEQUENCE){
 
@@ -250,7 +294,7 @@ public class Game {
 
     }
 
-    public void addCardInStack(int stackID, Card card) throws Exception{
+    public void addCardInStack(int stackID, Card card){
 
         if(stacks.get(stackID) == StackType.SEQUENCE){
 

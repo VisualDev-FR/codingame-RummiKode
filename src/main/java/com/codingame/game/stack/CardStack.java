@@ -7,7 +7,7 @@ import java.util.*;
 public class CardStack{
 
     protected int ID;
-    protected Map<String, Card> cards;
+    protected TreeMap<String, Card> cards;
     protected StackType type;
     protected int bonusValue;
     protected int bonusCardCount;
@@ -42,15 +42,13 @@ public class CardStack{
         for(Card card : this.cards.values()){
             inputs.add(card.getHashCode());
         }
-
-        Collections.sort(inputs);
-
-        return String.join(" ", inputs.toArray(new String[0]));
+        
+        return String.format("%s %s %s", this.ID, this.getType().ordinal(), String.join(" ", inputs.toArray(new String[0])));
     }
 
-    protected void addIfBonus(Card card){
+/*     protected void addIfBonus(Card card){
         if(card.isBonus()) this.bonusCardCount++;
-    }
+    } */
 
     protected void removeIfBonus(Card card){
         if(card.isBonus()) this.bonusCardCount--;
@@ -62,5 +60,18 @@ public class CardStack{
 
     public int cardsCount(){
         return this.cards.size();
-    }    
+    }
+
+    public Map<String, Card> getCards(){
+        return this.cards;
+    }
+
+    public String getString(){
+
+        return String.join(" ", this.cards.keySet().toArray(new String[0]));
+    }
+
+    public boolean containsCard(Card card){
+        return this.cards.containsKey(card.getHashCode());
+    }
 }

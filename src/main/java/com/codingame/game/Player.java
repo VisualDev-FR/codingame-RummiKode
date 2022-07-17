@@ -5,17 +5,22 @@ import java.util.Map;
 import java.util.HashMap;
 
 import com.codingame.gameengine.core.AbstractMultiplayerPlayer;
+import com.google.inject.Inject;
 import com.codingame.game.Config.Config;
+import com.codingame.game.Summary.GameSummaryManager;
 import com.codingame.game.action.Action;
 import com.codingame.game.card.*;
 
 public class Player extends AbstractMultiplayerPlayer {
 
+    @Inject private GameSummaryManager gameSummaryManager;
+
     private Map<String, Card> cardsInHand;
     private int remainingActions;
     private Action action;
     private boolean mustDraw;
-    //private List<String> possibleMoves; //TODO : caculer les actions possibles
+    private boolean pushedFirstSequence;
+    //private List<String> possibleMoves;
 
     @Override
     public int getExpectedOutputLines() {
@@ -33,14 +38,51 @@ public class Player extends AbstractMultiplayerPlayer {
         }
     }
 
-    public void reset(){
-        //this.possibleMoves = new ArrayList<String>();
+    public void update(Game game){
         this.mustDraw = true;
         this.remainingActions = Config.ACTIONS_PER_PLAYER;
+        //this.computePossibleMoves(game);
+    }
+
+    /* private void computePossibleMoves(Game game){
+
+        this.possibleMoves = new ArrayList<String>();        
+
+        for(Card card : this.cardsInHand.values()){
+
+            for(StackSequence sequenceStack : game.sequenceStacks.values()){
+
+                List<Card> takableCards = sequenceStack.getTakableCards();
+
+                for(Card takableCard : takableCards){
+
+                    this.possibleMoves.add(String.format("%s %s %s", Action.TAKE.toString(), sequenceStack.getID(), takableCard.getHashCode()));
+                }
+
+                if(sequenceStack.canAdd(card)){
+
+                    this.possibleMoves.add(String.format("%s %s %s", Action.ADD.toString(), sequenceStack.getID(), card.getHashCode()));
+                }
+            }
+        }
+
+        this.possibleMoves.add(Action.WAIT.toString());
+        this.possibleMoves.add(Action.RANDOM.toString());
+
+    } */
+
+    public void setLeftActions(int leftActions){
+        this.remainingActions = leftActions;
     }
 
     public void drawCard(Game game){
-        addCardInHand(game.drawCard());
+        if(game.drawCards.size() > 0){
+            addCardInHand(game.drawCard());
+        }else{
+            gameSummaryManager.anyCardLeftInCommonDraw(this);
+        }
+        
+        
     }
 
     public void addCardInHand(Card card){
@@ -73,34 +115,13 @@ public class Player extends AbstractMultiplayerPlayer {
         remainingActions--;
     }
 
-    public void setAction(Action action){
-        
+    public void setAction(Action action){        
         this.action = action;
-        
-        if(action == Action.WAIT){
-            this.remainingActions = 0;
-        }else if(action != Action.PUSH && action != Action.ADD){
-            this.removeOnePlay();
-        }else{
-            this.mustDraw = false;
-        }
     }
 
     public boolean canPlay(Game game){
-        return this.remainingActions > 0 || this.canAdd(game) || this.canPush();
-    }
-
-    public boolean canAdd(Game game){
-        // can the player add one of his cards in one or several stacks ?
-
-        
-
-        return true;
-    }
-
-    public boolean canPush(){
-        //TODO: implémenter la fonction
-        return true;
+        //TODO: implement this function
+        return this.remainingActions > 0; // || this.canAdd(game) || this.canPush();
     }
 
     public Action getAction(){
@@ -109,6 +130,10 @@ public class Player extends AbstractMultiplayerPlayer {
 
     public int actionsLeft(){
         return remainingActions;
+    }
+
+    public boolean hasPushedFirstSequence(){
+        return pushedFirstSequence;
     }
 
     public Map<String, Card> getCards(){

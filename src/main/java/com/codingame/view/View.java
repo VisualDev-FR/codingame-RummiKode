@@ -5,8 +5,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.codingame.game.card.*;
-import com.codingame.game.stack.*;
-
 
 import com.codingame.gameengine.module.entities.*;
 import com.google.inject.Inject;
@@ -53,26 +51,6 @@ public class View {
 
     public void MoveStack(){
 
-    }
-
-    public void PushStackSequence(StackSequence sequence){
-
-        // we search a cell wich has n cells available below, to display the full stackSequence 
-
-        int[] startCoord = getVerticalEmptySpace(sequence.cardsCount(), board);
-
-        List<Sprite> stack = new ArrayList<Sprite>();
-
-        for (int i = 0; i <= sequence.cardsCount(); i++){
-
-            int[] cardPosition = getBoardPosition(startCoord[0] + i, startCoord[1]);
-
-            Card card = sequence.getCard(i);
-
-            stack.add(displayCard(card, cardPosition[0], cardPosition[1]));            
-        }
-
-        stacks.add(stack);
     }
 
     public int[] getVerticalEmptySpace(int length, Sprite[][] space){
@@ -150,7 +128,7 @@ public class View {
 
     public void addInDraw(Map<String, Card> cards){
 
-        System.err.println("drawSize = " + cards.size());
+        //System.err.println("drawSize = " + cards.size());
         
         for(Card card : cards.values()){
 

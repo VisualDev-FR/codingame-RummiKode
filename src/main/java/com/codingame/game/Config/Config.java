@@ -13,6 +13,8 @@ public class Config {
     public static int MIN_SUM_TO_START = 20;
     public static int PLAYERS_COUNT = 2;
     public static int ACTIONS_PER_PLAYER = 5;
+    public static boolean ENABLE_BONUS = false;
+    public static int CARDS_MAX_VALUE = 12; 
 
     // GreenCircle config
     
