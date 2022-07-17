@@ -1,4 +1,4 @@
-package com.codingame.game;
+package com.codingame.game.ExeptionManager;
 
 //@SuppressWarnings("serial")
 public class InvalidInputException extends Exception {

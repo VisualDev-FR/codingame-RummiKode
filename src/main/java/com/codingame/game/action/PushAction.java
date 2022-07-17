@@ -4,12 +4,8 @@ import java.util.List;
 
 import com.codingame.game.card.Card;
 import com.codingame.game.stack.StackType;
-import com.google.inject.Inject;
-import com.codingame.game.InputChecker;
 
 public class PushAction extends Action{
-
-    @Inject InputChecker checker;
 
     private List<Card> cards;
     private StackType type;

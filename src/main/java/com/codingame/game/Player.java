@@ -7,7 +7,6 @@ import java.util.HashMap;
 import com.codingame.gameengine.core.AbstractMultiplayerPlayer;
 import com.google.inject.Inject;
 import com.codingame.game.Config.Config;
-import com.codingame.game.Summary.GameSummaryManager;
 import com.codingame.game.action.Action;
 import com.codingame.game.card.*;
 

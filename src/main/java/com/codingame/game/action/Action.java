@@ -1,9 +1,5 @@
 package com.codingame.game.action;
 
-/* public enum Action {
-    WAIT, RANDOM, TAKE, ADD, PUSH, SPLIT, JOIN, MOVE
-}
- */
 public abstract class Action {
 
     public static final String WAIT_PATTERN =  "WAIT";
@@ -13,8 +9,6 @@ public abstract class Action {
     public static final String SPLIT_PATTERN = "SPLIT <stackID> <cardCode_1> <cardCode_2>";
     public static final String JOIN_PATTERN =  "JOIN <stackID_1> <stackID_2>";
     public static final String MOVE_PATTERN =  "MOVE <stackID_From> <stackID_To> <cardCodeFrom>";
-
-    public static final Action NO_ACTION = new Action() {};
 
     public boolean isWait()     { return false; }
     public boolean isTake()     { return false; }

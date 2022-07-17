@@ -6,7 +6,6 @@ import com.codingame.gameengine.core.MultiplayerGameManager;
 import com.codingame.view.View;
 import com.google.inject.Inject;
 import com.codingame.game.Config.Config;
-import com.codingame.game.Summary.GameSummaryManager;
 import com.codingame.game.action.AddAction;
 import com.codingame.game.action.JoinAction;
 import com.codingame.game.action.MoveAction;

@@ -1,5 +1,7 @@
-package com.codingame.game;
+package com.codingame.game.ExeptionManager;
 
+import com.codingame.game.Game;
+import com.codingame.game.Player;
 import com.codingame.game.card.Card;
 import com.codingame.game.card.CardColors;
 import com.codingame.game.stack.StackType;

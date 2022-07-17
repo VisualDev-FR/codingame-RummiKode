@@ -5,7 +5,7 @@ import java.util.Properties;
 import java.util.TreeMap;
 
 import com.codingame.game.Config.Config;
-import com.codingame.game.Summary.GameSummaryManager;
+import com.codingame.game.ExeptionManager.*;
 import com.codingame.game.action.*;
 import com.codingame.game.card.Card;
 import com.codingame.game.card.CardColors;

@@ -1,8 +1,6 @@
-package com.codingame.game.Summary;
+package com.codingame.game;
 
-import com.codingame.game.GameRuleException;
-import com.codingame.game.InvalidInputException;
-import com.codingame.game.Player;
+import com.codingame.game.ExeptionManager.*;
 import com.codingame.game.card.Card;
 import com.codingame.game.stack.StackType;
 import com.codingame.gameengine.core.GameManager;
