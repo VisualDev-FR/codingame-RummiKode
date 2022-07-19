@@ -1,11 +1,14 @@
 package com.codingame.view;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.codingame.game.Game;
+import com.codingame.game.Player;
+import com.codingame.game.action.AddAction;
+import com.codingame.game.action.PushAction;
 import com.codingame.game.card.*;
-
 import com.codingame.gameengine.module.entities.*;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -25,91 +28,42 @@ public class View {
     final int GRID_ROWS = 15;
     final int GRID_COLUMNS = 26;
     final int CARD_SIZE = 65;
+    final int STACK_SIZE = 110;
     final int BOARD_OFFSET = 20;
+    final int DRAW_HEIGHT = 3;
+    
+    private boolean board[][];
 
-    final int DRAW_WIDTH = 4;
+    private Map<String, Integer> stackMap;
+    private Map<String, Integer> drawMap;
 
-    private static Sprite board[][];
-    private static Sprite draw[][];
+    private Map<Integer, Map<String, Sprite>> stackSprite;
+    private Map<Integer, Map<String, Sprite>> drawSprites;
 
-    List<List<Sprite>> stacks;
+    public void init(Game game){
 
-    public void init(){
+        this.board = new boolean[GRID_ROWS][GRID_ROWS - DRAW_HEIGHT];
 
-        board = new Sprite[GRID_ROWS][GRID_COLUMNS - DRAW_WIDTH];
-        draw = new Sprite[GRID_ROWS][DRAW_WIDTH];
+        this.screenWidth = gem.getWorld().getWidth();
+        this.screenHeight = gem.getWorld().getHeight();
 
-        stacks = new ArrayList<List<Sprite>>();
+        this.stackMap = new HashMap<String, Integer>();
+        this.drawMap = new HashMap<String, Integer>();
 
-        screenWidth = gem.getWorld().getWidth();
-        screenHeight = gem.getWorld().getHeight();
+        this.stackSprite = new HashMap<Integer, Map<String, Sprite>>();
+        this.drawSprites = new HashMap<Integer, Map<String, Sprite>>();
 
-        DisplayBackGround();
+        //DisplayGrid();              
+        initBackGround();
+        initSprites(game, game.getPlayers());
+        initDraws(game.playersCount());
 
-        //StackSequence sequence = new StackSequence(0, CardColors.BLUE, 0, 12);
+        // ! \\ CODE AFTER THIS LINES
     }
 
-    public void MoveStack(){
+    // INITIALIZE
 
-    }
-
-    public int[] getVerticalEmptySpace(int length, Sprite[][] space){
-
-        for (int col = 0; col < space[0].length; col++) {
-            
-            for (int row = 0; row <= space.length - length; row++) {
-                
-                boolean emptySpace = true;
-
-                for (int k = 0; k <= length; k++){
-
-                    int rowTest = (row + k) % GRID_ROWS;
-
-                    emptySpace = emptySpace && space[rowTest][col] == null;
-
-                    //System.err.printf("[%s, %s] = %s\n", row, col, draw[emptyCell[0]][emptyCell[1]] == null);
-                }
-
-                if(emptySpace) return new int[]{row, col};
-            }
-        }
-
-        return null;
-    }
-
-    public void addInDraw(Card card, int row, int col){
-
-        int[] cardPosition = getCardPosition(row, col);
-
-        draw[row][col] = displayCard(card, cardPosition[0], cardPosition[1]);
-    }
-
-    public void addInBoard(Card card, int row, int col){
-        
-        int[] cardPosition = getBoardPosition(row, col);
-
-        board[row][col] = displayCard(card, cardPosition[0], cardPosition[1]);
-    }
-
-    public Sprite displayCard(Card card, int row, int col){
-
-        Sprite sprite = gem.createSprite().setImage(card.getImage());
-
-        sprite.setY(row);
-        sprite.setX(col);
-
-        sprite.setBaseHeight(CARD_SIZE);
-        sprite.setBaseWidth(CARD_SIZE);
-        
-        return sprite;
-    }
-
-    public boolean isCellEmpty(int row, int col){
-
-        return board[row][col] != null && draw[row][col] != null; 
-    }
-
-    public void DisplayBackGround(){
+    public void initBackGround(){
 
         // Background
 
@@ -121,37 +75,252 @@ public class View {
         // DRAW
 
         gem.createRectangle()
-        .setHeight(screenHeight)
-        .setWidth((DRAW_WIDTH) * GRID_SIZE)
+        .setY((GRID_ROWS - DRAW_HEIGHT) * GRID_SIZE)
+        .setHeight((DRAW_HEIGHT + 1) * GRID_SIZE)
+        .setWidth(screenWidth)
         .setFillColor(DRAW_COLOR);
     }
 
-    public void addInDraw(Map<String, Card> cards){
+    public void initSprites(Game game, List<Player> players){
 
-        //System.err.println("drawSize = " + cards.size());
+        drawSprites.put(-1, new HashMap<String, Sprite>());
+
+        for(Card card : game.getDrawCards()){
+
+            Sprite sprite = gem.createSprite().setImage(card.getImage());
+    
+            sprite.setBaseWidth(CARD_SIZE);
+            sprite.setBaseHeight(CARD_SIZE);
+
+            int spriteY = (screenHeight + (GRID_ROWS - DRAW_HEIGHT) * GRID_SIZE) / 2  - CARD_SIZE / 2;
+            int spriteX = (screenWidth - CARD_SIZE) / 2;
+            
+            sprite.setX(spriteX);
+            sprite.setY(spriteY);
+
+            System.err.printf("drawCoords: [%s, %s]\n", spriteX, spriteY);
+            
+            int spriteIndex = drawMap.containsKey(getSpriteCode(card, 0)) ? 1 : 0;
+
+            drawMap.put(getSpriteCode(card, spriteIndex), -1);
+            drawSprites.get(-1).put(getSpriteCode(card, spriteIndex), sprite);
+        }
+
+        for(Player player : players){
+
+            drawSprites.put(player.getIndex(), new HashMap<String, Sprite>());
+
+            for(String strCard : player.getCardCodes()){
+
+                Card card = new Card(strCard);
+
+                Sprite sprite = gem.createSprite().setImage(card.getImage());
+    
+                sprite.setBaseWidth(CARD_SIZE);
+                sprite.setBaseHeight(CARD_SIZE);
+
+                int[] playerCoords = getPlayerCoords(player.getIndex());
+
+                System.err.printf("player %S Coords : [%s, %s]\n", player.getIndex(), playerCoords[0], playerCoords[1]);
+                
+                
+                sprite.setX(playerCoords[0] - CARD_SIZE / 2);
+                sprite.setY(playerCoords[1] - CARD_SIZE / 2);
         
-        for(Card card : cards.values()){
+                int spriteIndex = drawMap.containsKey(getSpriteCode(card, 0)) ? 1 : 0;
 
-            int[] emptyCell = getVerticalEmptySpace(1, draw);
+                drawMap.put(getSpriteCode(card, spriteIndex), player.getIndex());
+                drawSprites.get(player.getIndex()).put(getSpriteCode(card, spriteIndex), sprite);
+            }
+        }     
+    }
 
-            //System.err.printf("[%s, %s] = %s\n", emptyCell[0], emptyCell[1], draw[emptyCell[0]][emptyCell[1]] == null);
+    public void initDraws(int playersCount){
 
-            addInDraw(card, emptyCell[0], emptyCell[1]);            
+        Sprite bluesStack = gem.createSprite().setImage("blue_stack.png");
+
+        int[] bluePlayerCoords = getPlayerCoords(0);
+
+        bluesStack.setX(bluePlayerCoords[0] - STACK_SIZE / 2);
+        bluesStack.setY(bluePlayerCoords[1] - STACK_SIZE / 2);
+
+        bluesStack.setBaseWidth(STACK_SIZE);
+        bluesStack.setBaseHeight(STACK_SIZE);
+
+        Sprite yellowStack = gem.createSprite().setImage("yellow_stack.png");
+
+        int[] yellowPlayerCoords = getPlayerCoords(1);
+
+        yellowStack.setX(yellowPlayerCoords[0] - STACK_SIZE / 2);
+        yellowStack.setY(yellowPlayerCoords[1] - STACK_SIZE / 2);
+
+        yellowStack.setBaseWidth(STACK_SIZE);
+        yellowStack.setBaseHeight(STACK_SIZE);  
+        
+        Sprite drawStack = gem.createSprite().setImage("draw_stack.png");
+
+        drawStack.setX((screenWidth / 2) - STACK_SIZE / 2);
+        drawStack.setY(yellowPlayerCoords[1] - STACK_SIZE / 2);
+
+        drawStack.setBaseWidth(STACK_SIZE);
+        drawStack.setBaseHeight(STACK_SIZE);        
+
+    }
+
+    // PLAYS VIEWER
+
+    public void drawCard(Player player, Card card){
+
+        if(card == null) return;
+
+        String spriteCode = getSpriteFromDraw(-1, card);
+        Sprite sprite = getSprite(spriteCode);
+
+        assert sprite != null;
+
+        int[] playerCoords = getPlayerCoords(player.getIndex());
+
+        this.drawMap.put(spriteCode, player.getIndex());
+        this.drawSprites.get(player.getIndex()).put(spriteCode, sprite);
+        removeSpriteFromDraw(spriteCode, -1);
+
+        moveSprite(sprite, playerCoords[0] - CARD_SIZE / 2, playerCoords[1] - CARD_SIZE / 2);
+    }
+
+    public void pushStack(Player player, int stackID, PushAction pushAction){
+
+        int[] startCoords = getHorizontalEmptySpace(pushAction.getCards().size());
+
+        if(startCoords == null) return; // TODO: fix this
+
+        List<Card> cards = pushAction.getCards();
+        
+        int row = startCoords[0];
+        int col = startCoords[1];
+
+        int drawIndex = player.getIndex();
+
+        this.stackSprite.put(stackID, new HashMap<String, Sprite>());
+
+        for (int i = 0; i < cards.size(); i++){
+            
+            String spriteCode = getSpriteFromDraw(drawIndex, cards.get(i));
+
+            System.err.println(spriteCode + " " + drawSprites.get(drawIndex).keySet().toString());
+
+            Sprite sprite = getSprite(spriteCode);
+
+            this.stackMap.put(spriteCode, stackID);
+            this.stackSprite.get(stackID).put(spriteCode, sprite);
+
+            removeSpriteFromDraw(spriteCode, drawIndex);
+            moveSpriteOnBoard(sprite, row, col + i);
         }
     }
 
-    public void DisplayAllCards(){
+    public void addCard(Player player, int stackID, AddAction addAction){
 
-        for(CardColors color : CardColors.values()){
+        /* String spriteCode = getSpriteCode(addAction.getCardToAdd(), player.getIndex());
+        Sprite sprite = getSprite(spriteCode);
 
-            int cardCol = color.ordinal();
+        this.stackMap.put(spriteCode, stackID);
+        this.stackSprite.get(stackID).put(spriteCode, sprite);
 
-            for(int i = 0; i < 14; i++){
-        
-                addInDraw(new Card(color, i), i, cardCol);
-            }
-        }             
+        removeSpriteFromDraw(spriteCode, drawIndex);
+        moveSpriteOnBoard(sprite, row, col + i); */
     }
+
+    // SPRITE HANDLING
+
+    public String getSpriteCode(Card card, int index){
+        return String.format("%s %s", card.getHashCode(), index);
+    }
+
+    public void removeSpriteFromDraw(String spriteCode, int drawIndex){
+        drawMap.remove(spriteCode);
+        drawSprites.get(drawIndex).remove(spriteCode);
+    }
+
+    public void removeSpriteFromStack(String spriteCode, int stackID){
+        stackMap.remove(spriteCode);
+        stackSprite.get(stackID).remove(spriteCode);
+    }
+
+    public Sprite getSprite(String spriteCode){
+
+        /* if(stackMap.containsKey(spriteCode)){
+            return stackSprite.get(stackMap.get(spriteCode)).get(spriteCode);
+        }
+        else if(drawMap.containsKey(spriteCode)){
+            return drawSprites.get(drawMap.get(spriteCode)).get(spriteCode);
+        }
+        else{
+            assert false : String.format("sprite %s not found.", spriteCode);
+            return null;
+        } */
+
+        for(Map<String, Sprite> map : this.stackSprite.values()){
+
+            if(map.containsKey(spriteCode)){
+                return map.get(spriteCode);
+            }
+        }
+
+        for(Map<String, Sprite> map : this.drawSprites.values()){
+
+            if(map.containsKey(spriteCode)){
+                return map.get(spriteCode);
+            }
+        } 
+        
+        assert false : String.format("sprite %s not found.", spriteCode);
+        return null;        
+    }
+
+    public String getSpriteFromDraw(int drawIndex, Card card){
+
+        if(this.drawSprites.get(drawIndex).containsKey(getSpriteCode(card, 0))){
+            return getSpriteCode(card, 0);
+        }
+        else if(this.drawSprites.get(drawIndex).containsKey(getSpriteCode(card, 1))){
+            return getSpriteCode(card, 1);
+        }
+        else{
+            assert false : String.format("card %s not present in draw %s : %s", card.getHashCode(), drawIndex, drawSprites.get(drawIndex).keySet().toString());
+            return null;
+        }        
+    }
+
+    public String getSpriteFromStack(Card card, int stackID){
+
+        if(this.stackSprite.get(stackID).containsKey(getSpriteCode(card, 0))){
+            return getSpriteCode(card, 0);
+        }
+        else if(this.stackSprite.get(stackID).containsKey(getSpriteCode(card, 1))){
+            return getSpriteCode(card, 1);
+        }
+        else{
+            assert false : "card not present in stack";
+            return null;
+        }
+    }
+
+    public void moveSpriteOnBoard(Sprite sprite, int row, int col){
+
+        int[] coords = getCardPosition(row, col);
+
+        sprite.setX(coords[0]);
+        sprite.setY(coords[1]);
+
+        board[row][col] = true;
+    }
+
+    public void moveSprite(Sprite sprite, int x, int y){
+        sprite.setX(x);
+        sprite.setY(y);
+    }
+
+    // GRID HANDLING
 
     public void DisplayGrid(){
 
@@ -190,18 +359,53 @@ public class View {
 
     public int[] getCardPosition(int row, int col){
 
-        int cardRow = row * GRID_SIZE + GRID_SIZE / 2 - CARD_SIZE / 2;
-        int cardCol = col * GRID_SIZE + GRID_SIZE / 2 - CARD_SIZE / 2;
+        int cardX = col * GRID_SIZE + GRID_SIZE / 2 - CARD_SIZE / 2;
+        int cardY = row * GRID_SIZE + GRID_SIZE / 2 - CARD_SIZE / 2;
 
-        return new int[]{cardRow, cardCol};
+        return new int[]{cardX, cardY};
     }
 
-    public int[] getBoardPosition(int row, int col){
+    public int[] getPlayerCoords(int playerIndex){
 
-        int cardCol = col + DRAW_WIDTH;
+        int playerY = (screenHeight + (GRID_ROWS - DRAW_HEIGHT) * GRID_SIZE) / 2;
 
-        int[] cardPosition = getCardPosition(row, cardCol);
-
-        return new int[]{cardPosition[0], cardPosition[1] + BOARD_OFFSET};
+        if(playerIndex == 0){
+            return new int[]{GRID_SIZE,  playerY};
+        }
+        else if(playerIndex == 1){
+            return new int[]{(GRID_COLUMNS * GRID_SIZE - GRID_SIZE * 2), playerY};
+        }
+        return null;
     }
+
+    public int[] getHorizontalEmptySpace(int length){
+
+        length++; // in order to have one blank space between two cards
+
+        for (int col = 0; col < board[0].length - length; col++) {
+            
+            for (int row = 0; row < board.length; row++) {
+                
+                boolean emptySpace = true;
+
+                for (int k = 0; k <= length; k++){
+
+                    int colTest = (col + k) % GRID_COLUMNS;
+
+                    emptySpace = emptySpace && board[row][colTest] == false;
+
+                    //System.err.printf("[%s, %s] = %s\n", row, col, draw[emptyCell[0]][emptyCell[1]] == null);
+                }
+
+                if(emptySpace){
+                    return new int[]{row, col};
+                }/* else{
+                    col = (col + length) % GRID_COLUMNS;
+                } */
+            }
+        }
+
+        return null;
+    }
+
 }

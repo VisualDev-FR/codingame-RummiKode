@@ -1,13 +1,18 @@
 gameloop
-read cardsInHand:string(256)
+
+read cardsInHandCount:int
+loop cardsInHandCount read card:word(256)
+
 read playersCount:int
 loop playersCount read playerScore:int
-read stackCount:int
-loop stackCount read stack:string(256)
+
+read n:int
+loop n read stack:string(256)
+
 write WAIT
 
 INPUT
-cardsInHand: <CardNumber1_CardColor1> <CardNumber1_CardColor2> ...
+card: <CardNumber_CardColor> ex : "08_BLUE"
 stack: <stack_id> <stack_type> <card_1> <card_2> ...
 playerScore: the score of the player i (your playerIndex will always be 0)
 stackCount: the number of stacks pushed in the game, at the begin of the game, it always equals to 0

@@ -5,7 +5,6 @@ import java.util.Properties;
 import java.util.TreeMap;
 
 import com.codingame.game.Config.Config;
-import com.codingame.game.ExeptionManager.*;
 import com.codingame.game.action.*;
 import com.codingame.game.card.Card;
 import com.codingame.game.card.CardColors;
@@ -13,7 +12,7 @@ import com.codingame.game.stack.StackType;
 import com.codingame.gameengine.core.AbstractReferee;
 import com.codingame.gameengine.core.MultiplayerGameManager;
 import com.codingame.gameengine.core.AbstractPlayer.TimeoutException;
-
+import com.codingame.view.View;
 import com.google.inject.Inject;
 
 public class Referee extends AbstractReferee {
@@ -22,15 +21,15 @@ public class Referee extends AbstractReferee {
     @Inject private MultiplayerGameManager<Player> gameManager;
     @Inject private Game game;
     @Inject private InputChecker checker;
+    @Inject private View view;
     
     private static final int MAX_TURNS = 200;
 
     private int activePlayerId;
 
-    final boolean PERFORM_UPDATE = true;
-
+    long seed;
     int maxFrames;
-    boolean gameOverFrame;    
+    boolean gameOverFrame;  
 
     @Override
     public void init() {
@@ -49,12 +48,12 @@ public class Referee extends AbstractReferee {
             gameManager.setFrameDuration(500);
             gameManager.setMaxTurns(MAX_TURNS);
             gameManager.setFirstTurnMaxTime(1000);
-            gameManager.setTurnMaxTime(50);
+            gameManager.setTurnMaxTime(100);
             
             game.init(gameManager.getRandom());
             sendGlobalInfo();
 
-        } catch (Exception e) {
+        }catch (Exception e) {
             e.printStackTrace();
             System.err.println("Referee failed to initialize");
             abort();
@@ -65,45 +64,50 @@ public class Referee extends AbstractReferee {
     @Override
     public void gameTurn(int turn){
 
-        if(!PERFORM_UPDATE) return;
+        if (!gameOverFrame) {
 
-        Player player = gameManager.getPlayer(activePlayerId);
-        for (String line : game.getCurrentFrameInfoFor(player)) {
-            player.sendInputLine(line);
-        }
-
-        player.execute();
-        
-
-        try {
-            parseCommands(player, player.getOutputs(), game);
-            if (player.isActive()) {
-                game.performGameUpdate(player);
+            Player player = gameManager.getPlayer(activePlayerId);
+            for (String line : game.getCurrentFrameInfoFor(player)) {
+                player.sendInputLine(line);
             }
-        } catch (TimeoutException e) {
-            deactivatePlayer(player, "Timeout!");
-            gameSummaryManager.addPlayerTimeout(player);
-            gameSummaryManager.addPlayerDisqualified(player);
-        } catch (Exception e) {
-            deactivatePlayer(player, e.getMessage());
-            gameSummaryManager.addPlayerTimeout(player);
-            gameSummaryManager.addPlayerDisqualified(player);
-        } 
-        
-        setNextPhase(player);
-        gameManager.addToGameSummary(gameSummaryManager.getSummary());
+    
+            player.execute();            
+    
+            try {
+                parseCommands(player, player.getOutputs(), game);
+                if (player.isActive()) {
+                    game.performGameUpdate(player);
+                }
+            } catch (TimeoutException e) {
+                deactivatePlayer(player, "Timeout!");
+                gameSummaryManager.addPlayerTimeout(player);
+                gameSummaryManager.addPlayerDisqualified(player);
+            } /* catch (Exception e) { //TODO: enable this exception when the f*** viewer will stop to fail
+                deactivatePlayer(player, e.getMessage());
+                gameSummaryManager.addPlayerTimeout(player);
+                gameSummaryManager.addPlayerDisqualified(player);
+            }  */
+            
+            setNextPhase(player);
+            gameManager.addToGameSummary(gameSummaryManager.getSummary());
+            gameSummaryManager.clear();
+    
+            //view.update(game);
+            //view.refreshCards(game);
+            //view.refreshApplications(game);
+            //view.refreshPlayersTooltips(game);
 
-        //view.refreshCards(game);
-        //view.refreshApplications(game);
-        //view.refreshPlayersTooltips(game);
+            gameOverFrame = game.isGameOver();
 
-        if (game.isGameOver()) {
-            gameOverFrame = true;
-        }
-       
+        }else{
+            game.resetGameTurnData();
+            game.performGameOver();
+            gameManager.endGame();
+        }       
     }
 
     public void deactivatePlayer(Player player, String message) {
+        //player.deactivate();
         player.deactivate(escapeHTMLEntities(message));
         player.setScore(-1);
     }
@@ -132,15 +136,17 @@ public class Referee extends AbstractReferee {
     }
 
     private void setNextPhase(Player activePlayer){
-        // TODO: find a best way to decide if we switch player
-        if(!activePlayer.canPlay(game)) switchToNextPlayer(activePlayer);
+        if(!activePlayer.canPlay(game)){
+            switchToNextPlayer(activePlayer);
+        }
     }
 
     private void switchToNextPlayer(Player player) {
 
         if(player.hasToDraw()){
-            player.drawCard(game);
-            gameSummaryManager.drawCard(player, game.drawCards.size());
+            Card drawedCard = player.drawCard(game);
+            view.drawCard(player, drawedCard);
+            gameSummaryManager.drawCard(player, game.getDrawCards().size());
         }
 
         // move to next player
@@ -228,6 +234,7 @@ public class Referee extends AbstractReferee {
         //TAKE <stackID> <cardCode>
 
         checker.didPushFirstSequence(player, command);
+        checker.playerHasEnoughtPlays(player, command);
 
         int stackID = -1;
         String strCard = "";
@@ -303,6 +310,7 @@ public class Referee extends AbstractReferee {
         //SPLIT <stackID> <cardCode_1> <cardCode_2>
 
         checker.didPushFirstSequence(player, command);
+        checker.playerHasEnoughtPlays(player, command);
 
         int stackID = -1;
         String strCard1 = "";
@@ -337,6 +345,7 @@ public class Referee extends AbstractReferee {
         //JOIN <stackID_1> <stackID_2>
 
         checker.didPushFirstSequence(player, command);
+        checker.playerHasEnoughtPlays(player, command);
 
         int stackID_1 = -1;
         int stackID_2 = -1;
@@ -375,6 +384,7 @@ public class Referee extends AbstractReferee {
         //MOVE <stackID_From> <stackID_To> <cardCodeFrom>
 
         checker.didPushFirstSequence(player, command);
+        checker.playerHasEnoughtPlays(player, command);
 
         int stackFrom = -1;
         int stackTo = -1;
@@ -413,7 +423,7 @@ public class Referee extends AbstractReferee {
         }
 
         if(cardNumber < 0 || cardNumber > Config.CARDS_MAX_VALUE){
-            throw new InvalidInputException("The card number must be bewtween 0 and 12.");
+            throw new InvalidInputException("The card number must be between 0 and 12.");
         }else if(!checker.isCardColorValid(strCardColor)){
             throw new InvalidInputException("The card color is not valid");
         }else{
@@ -421,18 +431,22 @@ public class Referee extends AbstractReferee {
         }        
     }
 
-    private StackType getStackType(List<Card> cards, String command) throws GameRuleException{
+    private StackType getStackType(List<Card> cards, String command) throws GameRuleException, InvalidInputException{
 
         boolean checkSequence = true;
         boolean checkColor = true;
 
-        for (int i = 0; i < cards.size() - 1; i++) {
-            
-            Card card_n = cards.get(i);
-            Card card_n1 = cards.get(i+1);
+        try {                
+            for (int i = 0; i < cards.size() - 1; i++) {
+                
+                Card card_n = cards.get(i);
+                Card card_n1 = cards.get(i+1);
 
-            checkSequence = checker.isSequenceStack(card_n, card_n1) && checkSequence;
-            checkColor = checker.isColorStack(card_n, card_n1) && checkColor;
+                checkSequence = checker.isSequenceStack(card_n, card_n1) && checkSequence;
+                checkColor = checker.isColorStack(card_n, card_n1) && checkColor;
+            }
+        } catch (Exception e) {
+            throw new InvalidInputException(Action.PUSH_PATTERN, command);
         }
 
         if(checkSequence){

@@ -1,7 +1,9 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 
 import com.codingame.gameengine.runner.MultiplayerGameRunner;
+import com.codingame.game.Player;
 import com.codingame.game.card.*;
 import com.codingame.game.stack.StackSequence;
 
@@ -9,8 +11,16 @@ public class SkeletonMain {
     public static void main(String[] args) {
 
         playRummiKode();
-        //assertionTest();
+        //canMakeSequenceStack_TEST();
+        //canMakeColorStack_TEST();
 
+        //stackTest();
+        //testColors();
+    }
+
+    public static void testColors(){
+
+        System.err.println(CardColors.valueOf("black"));
     }
 
     static void playRummiKode(){
@@ -20,7 +30,7 @@ public class SkeletonMain {
         gameRunner.addAgent(Solution.class);
         gameRunner.addAgent(Solution.class);
 
-        //gameRunner.setSeed(6335831626512785165L);
+        //gameRunner.setSeed(5846751001701069202L);
 
         gameRunner.start();
 
@@ -92,4 +102,47 @@ public class SkeletonMain {
 
         return String.join(" ", strList);
     }
+
+    static void canMakeSequenceStack_TEST(){
+
+        Player player = new Player();
+        player.init();
+
+        player.addCardInHand(new Card(CardColors.BLUE, 1));
+        player.addCardInHand(new Card(CardColors.BLUE, 2));
+        player.addCardInHand(new Card(CardColors.BLUE, 11));
+        player.addCardInHand(new Card(CardColors.BLUE, 10));
+
+        System.err.println(player.canMakeSequenceStack(new Card(CardColors.BLUE, 0)));
+    }
+
+    static void canMakeColorStack_TEST(){
+
+        Player player = new Player();
+        player.init();
+
+        player.addCardInHand(new Card(CardColors.BLUE, 5));
+        player.addCardInHand(new Card(CardColors.GREEN, 5));
+        player.addCardInHand(new Card(CardColors.YELLOW, 7));
+
+        System.err.println(player.canMakeColorStack(new Card(CardColors.BLUE, 15)));
+    }    
+
+    static void stackTest(){
+
+        Stack<String> strStack = new Stack<String>();
+
+        String str1 = "String1";
+        String str2 = "String3";
+        String str3 = "String2";
+
+        String str4 = "String1";
+    
+        strStack.add(str1);
+        strStack.add(str2);
+        strStack.add(str3);
+
+        System.err.println(strStack.contains(str4));
+    }
+
 }

@@ -30,23 +30,6 @@ public class StackSequence extends CardStack{
         }
     }
 
-    public boolean isValid(){
-
-        // TODO: delete this function, is is already computed in the referee class
-
-        List<Card> cards = new ArrayList<Card>(this.cards.values());
-        
-        for (int i = 0; i < cards.size() - 1; i++){
-            
-            boolean checkSequence = cards.get(i + 1).getNumber() == (cards.get(i).getNumber() + 1);
-            boolean checkColor = cards.get(i).getColor() == cards.get(i + 1).getColor();
-
-            if(!checkSequence || !checkColor) return false;
-        }
-
-        return cards.size() >= Config.MIN_CARDS_TO_SPLIT;
-    }
-
     public List<Card> getTakableCards(){
 
         List<Card> takableCards = new ArrayList<Card>();

@@ -1,7 +1,5 @@
-package com.codingame.game.ExeptionManager;
+package com.codingame.game;
 
-import com.codingame.game.Game;
-import com.codingame.game.Player;
 import com.codingame.game.card.Card;
 import com.codingame.game.card.CardColors;
 import com.codingame.game.stack.StackType;
@@ -65,6 +63,12 @@ public class InputChecker {
 
     // EXEPTION THROWER
 
+    public void playerHasEnoughtPlays(Player player, String command) throws GameRuleException{
+        if(player.actionsLeft() <= 0){
+            throw new GameRuleException(command, String.format("Player %s as no play action left, he only can <PUSH> or <ADD> card in a stack.", player.getNicknameToken()));
+        }
+    }
+
     public void canAddInStack(Game game, String command, int stackID, Card card) throws GameRuleException{
         
         boolean canAdd = false;
@@ -81,8 +85,8 @@ public class InputChecker {
     }
 
     public void didPushFirstSequence(Player player, String command) throws GameRuleException{
-        if(!player.hasPushedFirstSequence()){
-            throw new GameRuleException(command, String.format("Player %s cannot %s, because he did not push a stack yet.", player.getNicknameToken(), command.split(" ")[0]));
+        if(!player.hasPushedFirstStack()){
+            throw new GameRuleException(command, String.format("Player %s cannot %s, because he did not push a stack yet.", player.getIndex(), command.split(" ")[0]));
         }
     }
 
@@ -109,7 +113,7 @@ public class InputChecker {
     }
 
     public void doesHaveThisCard(Player player, String command, Card card) throws GameRuleException{
-        if(!player.getCards().containsKey(card.getHashCode())){
+        if(!player.hasThisCard(card)){
             throw new GameRuleException(command, String.format("Player %s doesn't have a card %s in hand.", player.getNicknameToken(), card.getHashCode()));
         }
     }

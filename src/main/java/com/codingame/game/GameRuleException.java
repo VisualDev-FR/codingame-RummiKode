@@ -1,12 +1,12 @@
-package com.codingame.game.ExeptionManager;
+package com.codingame.game;
 
-//@SuppressWarnings("serial")
+@SuppressWarnings("serial")
 public class GameRuleException extends Exception {
     private final String errorMessage;
     private final String command;
 
     public GameRuleException(String command, String errorMessage) {
-        super("Invalid Input: Got '" + command + "'\nbut " + errorMessage);
+        super("Invalid Input: Got '" + command + "' but " + errorMessage);
         this.errorMessage = errorMessage;
         this.command = command;
     }

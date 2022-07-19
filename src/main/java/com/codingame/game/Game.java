@@ -5,7 +5,6 @@ import java.util.*;
 import com.codingame.gameengine.core.MultiplayerGameManager;
 import com.codingame.view.View;
 import com.google.inject.Inject;
-import com.codingame.game.Config.Config;
 import com.codingame.game.action.AddAction;
 import com.codingame.game.action.JoinAction;
 import com.codingame.game.action.MoveAction;
@@ -22,8 +21,8 @@ public class Game {
     @Inject private MultiplayerGameManager<Player> gameManager;
     @Inject private View view;
 
-    public Random random;
-    public Stack<Card> drawCards;
+    private Random random;
+    private Stack<Card> drawCards;
     
     public Map<Integer, StackSequence> sequenceStacks;  // HashMap wich will contain all sequenceStacks pushed in the game with their unique id
     public Map<Integer, StackColor> colorStacks;        // HashMap wich will contain all colorStacks pushed in the game with their unique id
@@ -41,31 +40,32 @@ public class Game {
 
         init_drawCards();
 
-        view.init();
-
         for(Player player : gameManager.getActivePlayers()) {
             player.init(this);            
+            System.err.printf("game.init after player %s draw : DrawSize = %s\n", player.getNicknameToken(), this.getDrawCards().size()); 
         }
 
-        view.addInDraw(gameManager.getActivePlayers().get(0).getCards());
+        view.init(this);
+    }
 
-        //System.err.println("drawCount = " + drawCards.size());
+    public List<Player> getPlayers(){
+        return gameManager.getActivePlayers();
+    }
+
+    public int playersCount(){
+        return gameManager.getPlayerCount();
     }
 
     public boolean isLastTurn() {
         return lastTurn;
     }    
 
-    public Map<String, Card> getPlayerCard(int playerIndex){
-        return gameManager.getActivePlayers().get(playerIndex).getCards();
-    }
-
     public List<String> getCurrentFrameInfoFor(Player player) {
         
         List<String> lines = new ArrayList<>();
-
         
-        lines.add(String.join(" ", player.getCards().keySet())); // cardsInHand
+        lines.add(Integer.toString(player.cardsCount())); // total number of cards in hand
+        lines.add(player.getInfos()); // cardsInHand
         lines.add(Integer.toString(gameManager.getPlayerCount())); // playersCount
         
         for(int i = 0; i < gameManager.getPlayerCount(); i++){
@@ -84,7 +84,7 @@ public class Game {
                 stackData = colorStacks.get(stackID).getInputs();
             }
 
-            lines.add(String.format("%s %s", stackID, stackData)); // stacks data
+            lines.add(stackData); // stacks data
         }
 
         return lines;
@@ -92,7 +92,7 @@ public class Game {
     
     public void init_drawCards(){
 
-        drawCards = new Stack<Card>();
+        this.drawCards = new Stack<Card>();
 
         // we had two cards of each in common draw
         
@@ -100,12 +100,12 @@ public class Game {
 
             for(int i = 0; i < 13; i++){
         
-                drawCards.add(new Card(color, i));
-                drawCards.add(new Card(color, i));
+                this.drawCards.add(new Card(color, i));
+                this.drawCards.add(new Card(color, i));
             }
         }
 
-        if(!Config.ENABLE_BONUS) return;
+        /* if(!Config.ENABLE_BONUS) return;
 
         // we search two random colors to add them in the common draw
 
@@ -121,15 +121,20 @@ public class Game {
         // we had two random-color bonus to the common draw
 
         drawCards.add(new Card(bonusColors[indexBonus_1]));
-        drawCards.add(new Card(bonusColors[indexBonus_2]));
+        drawCards.add(new Card(bonusColors[indexBonus_2])); 
+        */
     }
 
-    public Card drawCard(){
+    public Card drawOneCard(){
 
         Card card = drawCards.get(random.nextInt(drawCards.size()));
         drawCards.remove(card);
 
         return card; 
+    }
+
+    public Stack<Card> getDrawCards(){
+        return this.drawCards;
     }
 
     public List<String> getGlobalInfoFor(Player player) {
@@ -145,16 +150,38 @@ public class Game {
     }
 
     public boolean isGameOver() {
-        // one player is deactivated
+        
         List<Player> activePlayers = gameManager.getActivePlayers();
+        
         if (activePlayers.size() <= 1) {
             return true;
+        }else{
+            for(Player player : activePlayers){
+                if(player.cardsCount() <= 0) return true;
+            }
         }
-
         return false;
-        //TODO: the game isn't over if a player can still improve its rank
-        //return gameManager.getActivePlayers().stream().noneMatch(this::canImproveRanking);
     }    
+
+    public void resetGameTurnData() {
+        gameSummaryManager.clear();
+        for (Player player : gameManager.getActivePlayers()) {
+            player.setMessage(null);
+            //view.setPlayerMessage(player); // TODO: Implement this Function
+        }
+    }
+
+    public void performGameOver() {
+        List<Player> activePlayers = gameManager.getActivePlayers();
+        if (activePlayers.size() <= 1) {
+            if (activePlayers.size() == 1) {
+                gameManager.addToGameSummary(String.format("Only %s is still playing!",activePlayers.get(0).getNicknameToken()));
+            } else {
+                gameManager.addToGameSummary("No player remaining!");
+            }
+            return;
+        }
+    }
 
     // PLAYING FUNCTIONS
 
@@ -186,31 +213,43 @@ public class Game {
             player.setLeftActions(0);
         }
 
-        player.setScore(player.getCards().size());
+        player.setScore(player.cardsCount());
 
         // update view
-        //view.endOfTurn();
+        //view.endOfTurn(this);
     }    
 
     public void TAKE(Player player, TakeAction takeAction){
 
-        removeCardFromStack(takeAction.getStackID(), takeAction.getCardToTake());
+        int stackID = takeAction.getStackID();
+        Card cardToTake = takeAction.getCardToTake();
+
+        removeCardFromStack(stackID, cardToTake);
         
-        player.addCardInHand(takeAction.getCardToTake());
+        player.addCardInHand(cardToTake);
         player.removeOnePlay();
     }
 
     public void ADD(Player player, AddAction addAction){
-        
-        player.removeCardInHand(addAction.getCardToAdd());
 
-        StackType type = stacks.get(addAction.getStackID());        
+        int stackID = addAction.getStackID();
+        Card cardToAdd = addAction.getCardToAdd();
+        
+        player.removeCardInHand(cardToAdd);
+
+        StackType type = stacks.get(stackID);        
 
         if(type == StackType.SEQUENCE){
-            sequenceStacks.get(addAction.getStackID()).addCard(addAction.getCardToAdd());
-        }else{
-            colorStacks.get(addAction.getStackID()).addCard(addAction.getCardToAdd());
+            sequenceStacks.get(stackID).addCard(cardToAdd);
         }
+        else if(type == StackType.COLOR){
+            colorStacks.get(stackID).addCard(cardToAdd);
+        }
+        else{
+            assert false : "stackType unknown : " + type;
+        }
+
+        player.disableDraw();
     }
 
     public void PUSH(Player player, PushAction pushAction){
@@ -218,21 +257,28 @@ public class Game {
         List<Card> cards = pushAction.getCards();
         StackType type = pushAction.getType();
 
-        player.removeCardInHand(cards);
+        player.removeCardsInHand(cards);
 
         int stackID = getFreeStackID();
-        this.stacks.put(stackID, type);
 
         if(type == StackType.SEQUENCE){
-
             StackSequence stack = new StackSequence(stackID, cards);
-            this.sequenceStacks.put(stackID, stack);            
-            
-        }else{
-
+            this.sequenceStacks.put(stackID, stack);
+            this.stacks.put(stackID, type);
+            view.pushStack(player, stackID, pushAction);
+        }
+        else if(type == StackType.COLOR){
             StackColor stack = new StackColor(stackID, cards);
             this.colorStacks.put(stackID, stack);
+            this.stacks.put(stackID, type);
+            view.pushStack(player, stackID, pushAction);
         }
+        else{
+            assert false : "stackType unknown : " + type;
+        }
+
+        player.pushFirstStack();
+        player.disableDraw();
     }
 
     public void SPLIT(Player player, SplitAction splitAction){

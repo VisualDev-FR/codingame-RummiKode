@@ -12,6 +12,15 @@ public class Card{
         this.isBonus = false;
     }
 
+    public Card(String strCard){
+        
+        // 08_BLACK | 08_blAck | 8_BLACK | 8_blAcK
+
+        this.color = CardColors.valueOf(strCard.split("_")[1].toUpperCase());
+        this.number = Integer.parseInt(strCard.split("_")[0]);
+        this.isBonus = false;
+    }
+
     public Card(CardColors cardColor){
         this.color = cardColor;
         this.number = -1;
