@@ -241,9 +241,11 @@ public class Game {
 
         if(type == StackType.SEQUENCE){
             sequenceStacks.get(stackID).addCard(cardToAdd);
+            view.addCard(player, stackID, addAction);
         }
         else if(type == StackType.COLOR){
             colorStacks.get(stackID).addCard(cardToAdd);
+            view.addCard(player, stackID, addAction);
         }
         else{
             assert false : "stackType unknown : " + type;

@@ -30,7 +30,7 @@ public class SkeletonMain {
         gameRunner.addAgent(Solution.class);
         gameRunner.addAgent(Solution.class);
 
-        //gameRunner.setSeed(5846751001701069202L);
+        gameRunner.setSeed(-5401079311569243816L);
 
         gameRunner.start();
 
