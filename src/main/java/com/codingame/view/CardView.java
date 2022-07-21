@@ -30,6 +30,14 @@ public class CardView {
             .setY(spriteCoords[1]);
     }
 
+    private CardView(){
+        // For filling board with blank cardViews
+    }
+
+    public static CardView getBlank(){
+        return new CardView();
+    }
+
     public void setPosition(int row, int col) {
         
         this.row = row;

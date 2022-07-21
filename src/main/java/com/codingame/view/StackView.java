@@ -46,8 +46,8 @@ public class StackView {
         return this.cardViews.containsKey(spriteCode);
     }
 
-    public List<CardView> getCardViews() {
-        return new ArrayList<CardView>(this.cardViews.values());
+    public TreeMap<String, CardView> getCardViews() {
+        return this.cardViews;
     }
 
     public int size(){

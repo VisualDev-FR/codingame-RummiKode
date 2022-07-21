@@ -23,7 +23,7 @@ public class Referee extends AbstractReferee {
     @Inject private InputChecker checker;
     @Inject private View view;
     
-    private static final int MAX_TURNS = 200;
+    private static final int MAX_TURNS = 250;
 
     private int activePlayerId;
 

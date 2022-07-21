@@ -32,10 +32,11 @@ public class View {
     final static int STACK_SIZE = 110;
     final static int BOARD_OFFSET = 20;
     final static int DRAW_HEIGHT = 3;
-    final static int BOARD_COLUMNS = 26;
+
     final static int BOARD_ROWS = 11;
-    
-    private boolean board[][];
+    final static int BOARD_COLUMNS = 26;
+
+    private BoardView board;    
 
     private Map<String, Integer> stackMap;
     private Map<String, Integer> drawMap;
@@ -45,7 +46,7 @@ public class View {
 
     public void init(Game game){
 
-        this.board = new boolean[BOARD_ROWS][BOARD_COLUMNS];
+        this.board = new BoardView(BOARD_ROWS, BOARD_COLUMNS);
 
         this.screenWidth = gem.getWorld().getWidth();
         this.screenHeight = gem.getWorld().getHeight();
@@ -116,7 +117,7 @@ public class View {
 
                 CardView cardView = new CardView(gem, card, spriteIndex);
 
-                cardView.setCoords(playerCoords[0], playerCoords[1]);
+                cardView.setCoords(playerCoords[0] - CARD_SIZE / 2, playerCoords[1]  - CARD_SIZE / 2);
 
                 drawMap.put(cardView.getSpriteCode(), player.getIndex());
                 draws.get(player.getIndex()).addCardView(cardView);
@@ -160,25 +161,19 @@ public class View {
 
     public void drawCard(Player player, Card card){
 
-        if(card == null) return;
-
-        int[] playerCoords = getPlayerCoords(player.getIndex());
+        assert card != null : "/!\\ card is null :'(";
 
         CardView cardView = this.draws.get(-1).getCardView(card);
-        
-        cardView.setCoords(playerCoords[0], playerCoords[1]);
 
         this.drawMap.put(cardView.getSpriteCode(), player.getIndex());
         this.draws.get(player.getIndex()).addCardView(cardView);
         
         removeSpriteFromDraw(cardView.getSpriteCode(), -1);
+
+        board.update(this);
     }
 
     public void pushStack(Player player, int stackID, PushAction pushAction){
-
-        int[] startPosition = getEmptyPosition(pushAction.getCards().size());
-
-        if(startPosition == null) return; // TODO: fix this
 
         List<Card> cards = pushAction.getCards();
 
@@ -195,17 +190,14 @@ public class View {
             StackView stackView = this.stacks.get(stackID);
             
             stackView.addCardView(cardView);
-            stackView.setPosition(startPosition[0], startPosition[1]);
-
-            setOccupied(stackView.getPositions());
 
             removeSpriteFromDraw(cardView.getSpriteCode(), drawIndex);
         }
+
+        board.update(this);
     }
 
     public void addCard(Player player, int stackID, AddAction addAction){
-
-        // TODO: implement this function
 
         int drawIndex = player.getIndex();
         Card cardToAdd = addAction.getCardToAdd();
@@ -215,15 +207,31 @@ public class View {
 
         this.stackMap.put(cardView.getSpriteCode(), stackID);
 
-        int[] positionBeforeAdd = stackView.getPosition();
-        
         stackView.addCardView(cardView);
-        stackView.setPosition(positionBeforeAdd[0], positionBeforeAdd[1]);
-
         removeSpriteFromDraw(cardView.getSpriteCode(), drawIndex);
+
+        board.update(this);
     }
 
     // SPRITE HANDLING
+
+    public StackView getStackView(CardView cardView){
+
+        String spriteCode = cardView.getSpriteCode();
+
+        if(this.stackMap.containsKey(spriteCode)){
+            int stackID = stackMap.get(spriteCode);
+            return this.stacks.get(stackID);
+        }
+        else if(this.drawMap.containsKey(spriteCode)){
+            int stackID = drawMap.get(spriteCode);
+            return this.draws.get(stackID);
+        }
+        else{
+            assert false;
+            return null;
+        }
+    }
 
     public void removeSpriteFromDraw(String spriteCode, int drawIndex){
         drawMap.remove(spriteCode);
@@ -235,6 +243,13 @@ public class View {
         stacks.get(stackID).removeCardView(spriteCode);
     }
 
+    public Map<Integer, StackView> getStacks(){
+        return this.stacks;
+    }
+
+    public Map<Integer, StackView> getDraws(){
+        return this.draws;
+    }
     // GRID HANDLING
 
     public void DisplayGrid(){
@@ -284,58 +299,5 @@ public class View {
         }
         return null;
     }
-
-    public int[] getEmptyPosition(int length){        
-        
-        for (int col = 0; col < board[0].length; col++) {   
-            
-            for (int row = 0; row < board.length; row++) {
-                
-                boolean emptySpace = true;
-
-                for (int k = 0; k <= length; k++){
-
-                    int colTest = col + k;
-
-                    if(colTest < board[0].length){
-
-                        emptySpace = emptySpace && board[row][colTest] == false;
-
-                        System.err.printf("[%s, %s] = %s\n", row, col, board[row][colTest] == false);
-                        
-                    }else{
-                        emptySpace = false;
-                        break;
-                    }
-
-                }
-
-                if(emptySpace){ return new int[]{row, col + (col > 0 ? 1 : 0)};}
-            }
-        }
-
-        return null;
-    }
-
-    public void setFree(List<int[]> positions){
-        for(int[] position : positions){
-            setFree(position[0], position[1]);
-        }
-    }
-
-    public void setOccupied(List<int[]> positions){
-        for(int[] position : positions){
-            setOccupied(position[0], position[1]);
-        }
-    }
-
-    public void setFree(int row, int col){
-        board[row][col] = false;
-    }
-
-    public void setOccupied(int row, int col){
-        board[row][col] = true;
-    }
-
 
 }
