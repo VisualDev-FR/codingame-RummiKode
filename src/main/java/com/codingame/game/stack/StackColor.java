@@ -72,6 +72,14 @@ public class StackColor extends CardStack{
         this.colors[card.getColor().ordinal()] = false;
     }
 
+    public boolean canRemove(){
+        return this.cards.size() > Config.MIN_CARDS_TO_SPLIT;
+    }
+
+    public boolean canSplit(){
+        return false;
+    }
+
     public boolean canAdd(Card card){
 
         int colorRank = card.getColor().ordinal();

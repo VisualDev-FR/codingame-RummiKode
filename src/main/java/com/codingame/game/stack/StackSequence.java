@@ -45,14 +45,8 @@ public class StackSequence extends CardStack{
         return takableCards;
     }
 
-    public StackSequence mergeWith(StackSequence sequence){
-
-        TreeMap<String, Card> newCards = new TreeMap<String, Card>();
-
-        newCards.putAll(this.cards);
-        newCards.putAll(sequence.getCards());
-
-        return new StackSequence(this.ID, new ArrayList<Card>(newCards.values()));
+    public void mergeWith(StackSequence sequence){
+        this.cards.putAll(sequence.getCards());
     }
     
     public void addCard(Card card){
@@ -70,92 +64,51 @@ public class StackSequence extends CardStack{
         if(card_1 < card_2){
             card1 = card_1;
             card2 = card_2;
-        }else{
+        }else if(card_1 > card_2){
             card1 = card_2;
             card2 = card_1;
-        }
-
-        if(card1 - sequenceStart >= 3 && sequenceEnd - card2 >= 3){
-
-            List<Card> cards_1 = new ArrayList<Card>();
-            List<Card> cards_2 = new ArrayList<Card>();
-
-            for(Card card : this.cards.values()){
-                if(card.getNumber() <= card1){
-                    cards_1.add(card);
-                }else if(card.getNumber() >= card2){
-                    cards_2.add(card);
-                }
-            }            
-
-            StackSequence sequence_1 = new StackSequence(this.ID, cards_1);
-            StackSequence sequence_2 = new StackSequence(newID, cards_2);
-
-            return new StackSequence[]{sequence_1, sequence_2};
-
         }else{
-            assert false : "";
-            return null;
+            assert false : "cant split, the two cards index are the same";
         }
+
+        List<Card> cards_1 = new ArrayList<Card>();
+        List<Card> cards_2 = new ArrayList<Card>();
+
+        for(Card card : this.cards.values()){
+            if(card.getNumber() <= card1){
+                cards_1.add(card);
+            }else if(card.getNumber() >= card2){
+                cards_2.add(card);
+            }
+        }            
+
+        StackSequence sequence_1 = new StackSequence(this.ID, cards_1);
+        StackSequence sequence_2 = new StackSequence(newID, cards_2);
+
+        return new StackSequence[]{sequence_1, sequence_2};
+
     }
 
-    public List<StackSequence> remove(int newID, Card cardToRemove){
+    public boolean canSplit(int card_1, int card_2){
 
-        List<StackSequence> newSequences = new ArrayList<StackSequence>();
+        int card1 = -1;
+        int card2 = -1;
 
-        if(cardToRemove.getNumber() > sequenceStart && cardToRemove.getNumber() < sequenceEnd){
-
-            // is the card to remove, contained into the cardSequence ?
-
-            List<Card> cards_1 = new ArrayList<Card>();
-            List<Card> cards_2 = new ArrayList<Card>();
-
-            for(Card card : this.cards.values()){
-                if(card.getNumber() < cardToRemove.getNumber()){
-                    cards_1.add(card);
-                }else if(card.getNumber() > cardToRemove.getNumber()){
-                    cards_2.add(card);
-                }
-            }            
-
-            newSequences.add(new StackSequence(this.ID, cards_1));
-            newSequences.add(new StackSequence(newID, cards_2));
-
-        }else if(cardToRemove.getNumber() == sequenceStart){
-
-            // is the card to remove at the start of the sequence ?
-            
-            List<Card> newCards = new ArrayList<Card>();
-
-            for(Card card : this.cards.values()){
-                if(card.getNumber() > sequenceStart){
-                    newCards.add(card);
-                }
-            }
-
-            newSequences.add(new StackSequence(this.ID, newCards));
-
-        }else if(cardToRemove.getNumber() == sequenceEnd){
-
-            // is the card to remove at the end of the sequence ?
-
-            List<Card> newCards = new ArrayList<Card>();
-
-            for(Card card : this.cards.values()){
-                if(card.getNumber() < sequenceEnd){
-                    newCards.add(card);
-                }
-            }
-
-            newSequences.add(new StackSequence(this.ID, newCards));
-
+        if(card_1 < card_2){
+            card1 = card_1;
+            card2 = card_2;
+        }else if(card_1 > card_2){
+            card1 = card_2;
+            card2 = card_1;
         }else{
-            //throw new Exception(String.format("StackSequence.remove : the card %s is not contained in the sequence", cardToRemove.getHashCode()));
-            assert false : String.format("StackSequence.remove : the card %s is not contained in the sequence", cardToRemove.getHashCode());
+            return false;
         }
-        
 
-        return newSequences;            
+        return card1 - sequenceStart >= Config.MIN_CARDS_TO_SPLIT && sequenceEnd - card2 >= Config.MIN_CARDS_TO_SPLIT && Math.abs(card_1 - card_2) == 1;
+    }
+
+    public void remove(Card cardToRemove){
+        this.cards.remove(cardToRemove.getHashCode());        
     }
 
     public boolean canAdd(Card card){

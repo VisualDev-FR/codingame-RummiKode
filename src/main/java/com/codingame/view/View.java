@@ -7,8 +7,13 @@ import java.util.Map;
 import com.codingame.game.Game;
 import com.codingame.game.Player;
 import com.codingame.game.action.AddAction;
+import com.codingame.game.action.JoinAction;
+import com.codingame.game.action.MoveAction;
 import com.codingame.game.action.PushAction;
+import com.codingame.game.action.SplitAction;
+import com.codingame.game.action.TakeAction;
 import com.codingame.game.card.*;
+import com.codingame.game.stack.StackSequence;
 import com.codingame.gameengine.module.entities.*;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -63,6 +68,28 @@ public class View {
         initDraws(game.playersCount());
 
         // ! \\ CODE AFTER THIS LINES
+    }
+
+    public void update(Player player){
+
+        if (player.getAction().isMove()) {
+            this.moveCard(player);
+        }
+        else if (player.getAction().isTake()) {
+            this.takeCard(player);
+        }
+        else if (player.getAction().isAdd()) {
+            this.addCard(player);
+        }
+        else if (player.getAction().isPush()) {
+            this.pushStack(player);
+        }
+        else if (player.getAction().isSplit()) {
+            this.splitStack(player);
+        }
+        else if (player.getAction().isJoin()) {
+            this.joinStack(player);
+        }
     }
 
     // INITIALIZE
@@ -173,8 +200,11 @@ public class View {
         board.update(this);
     }
 
-    public void pushStack(Player player, int stackID, PushAction pushAction){
+    public void pushStack(Player player){
 
+        PushAction pushAction = (PushAction) player.getAction();
+
+        int stackID = pushAction.getStackID();
         List<Card> cards = pushAction.getCards();
 
         int drawIndex = player.getIndex();
@@ -197,8 +227,11 @@ public class View {
         board.update(this);
     }
 
-    public void addCard(Player player, int stackID, AddAction addAction){
+    public void addCard(Player player){
 
+        AddAction addAction = (AddAction) player.getAction();
+
+        int stackID = addAction.getStackID();
         int drawIndex = player.getIndex();
         Card cardToAdd = addAction.getCardToAdd();
         
@@ -209,6 +242,105 @@ public class View {
 
         stackView.addCardView(cardView);
         removeSpriteFromDraw(cardView.getSpriteCode(), drawIndex);
+
+        board.update(this);
+    }
+
+    public void splitStack(Player player){
+
+        SplitAction splitAction = (SplitAction) player.getAction();
+
+        int stackID = splitAction.getStackID();
+        int newStackId = splitAction.getNewStackID();
+
+        StackSequence stack2 = splitAction.getStack2();
+
+        this.stacks.put(newStackId, new StackView());
+
+        for(CardView cardView : this.stacks.get(stackID).getCardViews().values()){
+
+            String spriteCode = cardView.getSpriteCode();
+
+            if(stack2.containsCard(cardView.getCard())){
+
+                this.stackMap.put(spriteCode, newStackId);
+                this.stacks.get(newStackId).addCardView(cardView);
+                
+                removeSpriteFromStack(spriteCode, stackID);
+            }
+        }
+
+        board.update(this);
+    }
+
+    public void joinStack(Player player){
+        
+        JoinAction joinAction = (JoinAction) player.getAction();
+
+        int stackID = joinAction.getStackID_1();
+        int oldStackID = joinAction.getStackID_2();
+
+        StackView oldStack = this.stacks.get(oldStackID);
+
+        for(CardView cardView : oldStack.getCardViews().values()){
+
+            String spriteCode = cardView.getSpriteCode();
+
+            this.stackMap.put(spriteCode, stackID);
+            this.stacks.get(stackID).addCardView(cardView);
+            
+            removeSpriteFromStack(spriteCode, oldStackID);            
+        }
+
+        board.update(this);
+    }
+
+    public void moveCard(Player player){
+
+        MoveAction moveAction = (MoveAction) player.getAction();
+
+        int stackFrom = moveAction.getStackID_From();
+        int stackTo = moveAction.getStackID_To();
+        Card cardToMove = moveAction.getCardToMove();
+
+        if(moveAction.doesMakeNewStack()){
+            // TODO: Code this part 
+        }else{
+
+            CardView cardViewToMove = this.stacks.get(stackFrom).getCardView(cardToMove);
+
+            String spriteCode = cardViewToMove.getSpriteCode();
+
+            this.stackMap.put(spriteCode, stackTo);
+            this.stacks.get(stackTo).addCardView(cardViewToMove);
+
+            removeSpriteFromStack(spriteCode, stackFrom);
+        }
+
+        board.update(this);
+    }
+
+    public void takeCard(Player player){
+
+        TakeAction takeAction = (TakeAction) player.getAction();
+
+        int stackID = takeAction.getStackID();
+        Card cardToTake = takeAction.getCardToTake();
+        int drawIndex = player.getIndex();
+
+        if(takeAction.doesMakeNewStack()){
+            // TODO: Code this part 
+        }else{
+
+            CardView cardViewToTake = this.stacks.get(stackID).getCardView(cardToTake);
+
+            String spriteCode = cardViewToTake.getSpriteCode();
+
+            this.drawMap.put(spriteCode, drawIndex);
+            this.draws.get(drawIndex).addCardView(cardViewToTake);
+
+            removeSpriteFromStack(spriteCode, stackID);
+        }
 
         board.update(this);
     }
@@ -250,6 +382,7 @@ public class View {
     public Map<Integer, StackView> getDraws(){
         return this.draws;
     }
+    
     // GRID HANDLING
 
     public void DisplayGrid(){

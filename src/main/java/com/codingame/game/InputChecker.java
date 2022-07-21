@@ -117,4 +117,32 @@ public class InputChecker {
             throw new GameRuleException(command, String.format("Player %s doesn't have a card %s in hand.", player.getNicknameToken(), card.getHashCode()));
         }
     }
+
+    public void canTakeCard(Game game, String command, Card card, int stackID) throws GameRuleException{
+
+        GameRuleException cantTakeCard = new GameRuleException(command, String.format("The card %s cannot be taken from the stack %s", card.getHashCode(), stackID));
+
+        if(game.stacks.get(stackID) == StackType.SEQUENCE){
+            if(!game.sequenceStacks.get(stackID).canRemove(card)){
+                throw cantTakeCard;
+            }
+        }
+        else if(game.stacks.get(stackID) == StackType.COLOR){
+            if(!game.colorStacks.get(stackID).canRemove()){
+                throw cantTakeCard;
+            }
+        }
+    }
+
+    public void canSplitStack(Game game, String command, Card card1, Card card2, int stackID) throws GameRuleException{
+
+        if(game.stacks.get(stackID) == StackType.SEQUENCE){
+            if(!game.sequenceStacks.get(stackID).canSplit(card1.getNumber(), card2.getNumber())){
+                throw new GameRuleException(command, String.format("The stack %s cannot be splitted with cards %s and %s", stackID, card1.getHashCode(), card2.getHashCode()));
+            }
+        }
+        else if(game.stacks.get(stackID) == StackType.COLOR){
+            throw new GameRuleException(command, "A colorStack cannot be splitted");            
+        }
+    }    
 }

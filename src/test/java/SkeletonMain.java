@@ -30,7 +30,7 @@ public class SkeletonMain {
         gameRunner.addAgent(Solution.class);
         gameRunner.addAgent(Solution.class);
 
-        gameRunner.setSeed(6209386355918829359L); // superposition tour 141 / 161
+        //gameRunner.setSeed(6209386355918829359L); // superposition tour 141 / 161
 
         gameRunner.start();
 

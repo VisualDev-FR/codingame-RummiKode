@@ -71,7 +71,7 @@ public class Referee extends AbstractReferee {
                 player.sendInputLine(line);
             }
     
-            player.execute();            
+            player.execute();
     
             try {
                 parseCommands(player, player.getOutputs(), game);
@@ -82,20 +82,18 @@ public class Referee extends AbstractReferee {
                 deactivatePlayer(player, "Timeout!");
                 gameSummaryManager.addPlayerTimeout(player);
                 gameSummaryManager.addPlayerDisqualified(player);
-            } /* catch (Exception e) { //TODO: enable this exception when the f*** viewer will stop to fail
+            } catch (Exception e) {
                 deactivatePlayer(player, e.getMessage());
                 gameSummaryManager.addPlayerTimeout(player);
                 gameSummaryManager.addPlayerDisqualified(player);
-            }  */
+            } 
             
             setNextPhase(player);
             gameManager.addToGameSummary(gameSummaryManager.getSummary());
             gameSummaryManager.clear();
     
-            //view.update(game);
-            //view.refreshCards(game);
-            //view.refreshApplications(game);
-            //view.refreshPlayersTooltips(game);
+            view.update(player);
+            //view.refreshPlayersTooltips(game); // TODO: ajouter les tooltips
 
             gameOverFrame = game.isGameOver();
 
@@ -158,11 +156,13 @@ public class Referee extends AbstractReferee {
         }
     }    
 
-    public void parseCommands(Player player, List<String> lines, Game game){
+    public Action parseCommands(Player player, List<String> lines, Game game){
         
+        Action playedAction = null;
+
         for (String command : lines) {
             try {
-                parseCommand(player, command, game);
+                playedAction = parseCommand(player, command, game);
             } catch (InvalidInputException e) {
                 gameSummaryManager.addPlayerBadCommand(player, e);
                 gameSummaryManager.addPlayerDisqualified(player);
@@ -173,9 +173,11 @@ public class Referee extends AbstractReferee {
                 deactivatePlayer(player, e.getMessage());
             }
         }
+
+        return playedAction;
     }
 
-    public void parseCommand(Player player, String command, Game game) throws GameRuleException, InvalidInputException {
+    public Action parseCommand(Player player, String command, Game game) throws GameRuleException, InvalidInputException {
 
         /* 
             WAIT
@@ -190,40 +192,47 @@ public class Referee extends AbstractReferee {
         if(checker.isWaitAction(command)){
 
             player.setAction(new WaitAction());
+            return null;
 
         }else if(checker.isTakeAction(command)){
 
             TakeAction action = parseTakeAction(player, command);
             player.setAction(action);
+            return action;
         
         }else if(checker.isAddAction(command)){
 
             AddAction action = parseAddAction(player, command);
             player.setAction(action);
+            return action;
         
         }else if(checker.isPushAction(command)){
 
             PushAction action = parsePushAction(player, command);            
             player.setAction(action);
+            return action;
 
         }else if(checker.isSplitAction(command)){
 
             SplitAction action = parseSplitAction(player, command);
             player.setAction(action);
+            return action;
         
         }else if(checker.isJoinAction(command)){
 
             JoinAction action = parseJoinAction(player, command);
             player.setAction(action);
+            return action;
         
         }else if(checker.isMoveAction(command)){
 
             MoveAction action = parseMoveAction(player, command);
             player.setAction(action);
+            return action;
         
         }else{
 
-            throw new InvalidInputException("WAIT | TAKE | ADD | PUSH | SPLIT | JOIN | MOVE", command.split(" ")[0]);        
+            throw new InvalidInputException("WAIT | TAKE | ADD | PUSH | SPLIT | JOIN | MOVE", command.split(" ")[0]);
         }        
     }
 
@@ -250,6 +259,7 @@ public class Referee extends AbstractReferee {
 
         checker.doesStackExist(game, command, stackID);
         checker.doesStackContains(game, command, stackID, cardToTake);
+        checker.canTakeCard(game, command, new Card(strCard), stackID);
 
         return new TakeAction(stackID, cardToTake);
     }
@@ -302,7 +312,7 @@ public class Referee extends AbstractReferee {
         List<Card> cardList = new ArrayList<Card>(cards.values());
         StackType type = getStackType(cardList, command);
 
-        return new PushAction(cardList, type);        
+        return new PushAction(cardList, type, game.getFreeStackID());        
     }
 
     private SplitAction parseSplitAction(Player player, String command) throws InvalidInputException, GameRuleException{
@@ -330,14 +340,9 @@ public class Referee extends AbstractReferee {
         checker.doesStackExist(game, command, stackID);
         checker.doesStackContains(game, command, stackID, card1);
         checker.doesStackContains(game, command, stackID, card2);
+        checker.canSplitStack(game, command, card1, card2, stackID);        
 
-        if(game.stacks.get(stackID) == StackType.COLOR){
-            throw new GameRuleException(command, "A color stack cannot be splited");
-        }else if(Math.abs(card1.getNumber() - card2.getNumber()) != 1){
-            throw new GameRuleException(command, "The two specified cards should have a consecutive index");
-        }else{
-            return new SplitAction(stackID, card1, card2);
-        }        
+        return new SplitAction(stackID, game.getFreeStackID(), card1, card2);
     } 
     
     private JoinAction parseJoinAction(Player player, String command) throws InvalidInputException, GameRuleException{

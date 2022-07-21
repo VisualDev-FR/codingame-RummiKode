@@ -24,17 +24,17 @@ public class Game {
     private Random random;
     private Stack<Card> drawCards;
     
-    public Map<Integer, StackSequence> sequenceStacks;  // HashMap wich will contain all sequenceStacks pushed in the game with their unique id
-    public Map<Integer, StackColor> colorStacks;        // HashMap wich will contain all colorStacks pushed in the game with their unique id
-    public Map<Integer, StackType> stacks;              // HashMap wich will contain all stackIDs pushed in the game with their stackType
+    public TreeMap<Integer, StackSequence> sequenceStacks;  // HashMap wich will contain all sequenceStacks pushed in the game with their unique id
+    public TreeMap<Integer, StackColor> colorStacks;        // HashMap wich will contain all colorStacks pushed in the game with their unique id
+    public TreeMap<Integer, StackType> stacks;              // HashMap wich will contain all stackIDs pushed in the game with their stackType
 
     private boolean lastTurn;
 
     public void init(Random secureRandom){
 
-        stacks = new HashMap<Integer, StackType>();        
-        sequenceStacks = new HashMap<Integer, StackSequence>();
-        colorStacks = new HashMap<Integer, StackColor>();
+        stacks = new TreeMap<Integer, StackType>();        
+        sequenceStacks = new TreeMap<Integer, StackSequence>();
+        colorStacks = new TreeMap<Integer, StackColor>();
 
         random = secureRandom;
 
@@ -191,10 +191,12 @@ public class Game {
         //view.setPlayerMessage(player);        
                  
         if (player.getAction().isMove()) {
-            MOVE(player, (MoveAction) player.getAction());
+            MOVE((MoveAction) player.getAction());
+            player.removeOnePlay();
         }
         else if (player.getAction().isTake()) {
             TAKE(player, (TakeAction) player.getAction());
+            player.removeOnePlay();
         }
         else if (player.getAction().isAdd()) {
             ADD(player, (AddAction) player.getAction());
@@ -203,10 +205,12 @@ public class Game {
             PUSH(player, (PushAction) player.getAction());
         }
         else if (player.getAction().isSplit()) {
-            SPLIT(player, (SplitAction) player.getAction());
+            SPLIT((SplitAction) player.getAction());
+            player.removeOnePlay();
         }
         else if (player.getAction().isJoin()) {
-            JOIN(player, (JoinAction) player.getAction());
+            JOIN((JoinAction) player.getAction());
+            player.removeOnePlay();
         }        
         else if (player.getAction().isWait()) {
             gameSummaryManager.wait(player);
@@ -224,10 +228,30 @@ public class Game {
         int stackID = takeAction.getStackID();
         Card cardToTake = takeAction.getCardToTake();
 
-        removeCardFromStack(stackID, cardToTake);
+        if(this.stacks.get(stackID) == StackType.SEQUENCE){
+
+            StackSequence sequence = this.sequenceStacks.get(stackID);
+
+            if(cardToTake.getNumber() == sequence.getFirstNumber() || cardToTake.getNumber() == sequence.getLastNumber()){
+                removeCardFromStack(stackID, cardToTake);
+            }
+            else{
+
+                int newStackID = getFreeStackID();
+
+                takeAction.setNewStackID(newStackID);
+
+                Card card1 = new Card(cardToTake.getColor(), cardToTake.getNumber() - 1);
+                Card card2 = new Card(cardToTake.getColor(), cardToTake.getNumber() + 1);
+
+                SPLIT(new SplitAction(stackID, newStackID, card1, card2));
+            }
+        }
+        else if(this.stacks.get(stackID) == StackType.COLOR){
+            removeCardFromStack(stackID, cardToTake);
+        }       
         
         player.addCardInHand(cardToTake);
-        player.removeOnePlay();
     }
 
     public void ADD(Player player, AddAction addAction){
@@ -241,11 +265,9 @@ public class Game {
 
         if(type == StackType.SEQUENCE){
             sequenceStacks.get(stackID).addCard(cardToAdd);
-            view.addCard(player, stackID, addAction);
         }
         else if(type == StackType.COLOR){
             colorStacks.get(stackID).addCard(cardToAdd);
-            view.addCard(player, stackID, addAction);
         }
         else{
             assert false : "stackType unknown : " + type;
@@ -258,22 +280,23 @@ public class Game {
 
         List<Card> cards = pushAction.getCards();
         StackType type = pushAction.getType();
+        int stackID = pushAction.getStackID();
 
         player.removeCardsInHand(cards);
 
-        int stackID = getFreeStackID();
+        //int stackID = getFreeStackID();
 
         if(type == StackType.SEQUENCE){
             StackSequence stack = new StackSequence(stackID, cards);
             this.sequenceStacks.put(stackID, stack);
             this.stacks.put(stackID, type);
-            view.pushStack(player, stackID, pushAction);
+            //view.pushStack(player, stackID, pushAction);
         }
         else if(type == StackType.COLOR){
             StackColor stack = new StackColor(stackID, cards);
             this.colorStacks.put(stackID, stack);
             this.stacks.put(stackID, type);
-            view.pushStack(player, stackID, pushAction);
+            //view.pushStack(player, stackID, pushAction);
         }
         else{
             assert false : "stackType unknown : " + type;
@@ -283,16 +306,24 @@ public class Game {
         player.disableDraw();
     }
 
-    public void SPLIT(Player player, SplitAction splitAction){
+    public void SPLIT(SplitAction splitAction){
 
         int stackID = splitAction.getStackID();
+        int newStackID = splitAction.getNewStackID();
         Card card1 = splitAction.getCard1();
         Card card2 = splitAction.getCard2();
 
-        this.sequenceStacks.get(stackID).split(getFreeStackID(), card1.getNumber(), card2.getNumber());
-    }
+        StackSequence[] newStacks = this.sequenceStacks.get(stackID).split(newStackID, card1.getNumber(), card2.getNumber());
 
-    public void JOIN(Player player, JoinAction joinAction){
+        splitAction.setStacks(newStacks);
+    
+        removeStack(stackID);
+        
+        addStack(newStacks[0]);
+        addStack(newStacks[1]);
+    }   
+
+    public void JOIN(JoinAction joinAction){
 
         int stackID_1 = joinAction.getStackID_1();
         int stackID_2 = joinAction.getStackID_2();
@@ -300,45 +331,52 @@ public class Game {
         StackSequence stack_1 = sequenceStacks.get(stackID_1);
         StackSequence stack_2 = sequenceStacks.get(stackID_2);
 
-        stacks.remove(stackID_1);
-        stacks.remove(stackID_2);
+        removeStack(stackID_2);
 
-        sequenceStacks.remove(stackID_1);
-        sequenceStacks.remove(stackID_2);
-
-        StackSequence mergedStack = stack_1.mergeWith(stack_2);
-
-        stacks.put(mergedStack.getID(), StackType.SEQUENCE);
-        sequenceStacks.put(mergedStack.getID(), mergedStack);
+        stack_1.mergeWith(stack_2);        
     }
 
-    public void MOVE(Player player, MoveAction moveAction){
+    public void MOVE(MoveAction moveAction){
 
-        removeCardFromStack(moveAction.getStackID_From(), moveAction.getCardToMove());
-        addCardInStack(moveAction.getStackID_To(), moveAction.getCardToMove());        
+        Card cardToMove = moveAction.getCardToMove();
+
+        int stackFrom = moveAction.getStackID_From();
+        int stackTo = moveAction.getStackID_To();
+
+        if(this.stacks.get(stackFrom) == StackType.SEQUENCE){
+
+            StackSequence sequence = this.sequenceStacks.get(stackFrom);
+
+            if(cardToMove.getNumber() == sequence.getFirstNumber() || cardToMove.getNumber() == sequence.getLastNumber()){
+                removeCardFromStack(stackFrom, cardToMove);
+            }
+            else{
+
+                int newStackID = getFreeStackID();
+
+                moveAction.setNewStackID(newStackID);
+
+                Card card1 = new Card(cardToMove.getColor(), cardToMove.getNumber() - 1);
+                Card card2 = new Card(cardToMove.getColor(), cardToMove.getNumber() + 1);
+
+                SPLIT(new SplitAction(stackFrom, newStackID, card1, card2));
+            }
+        }
+        else if(this.stacks.get(stackFrom) == StackType.COLOR){
+            removeCardFromStack(stackFrom, cardToMove);
+        }       
+        
+        addCardInStack(stackTo, cardToMove);
     }
 
     // STACKS HANDLING
 
     public void removeCardFromStack(int stackID, Card card){
-
         if(stacks.get(stackID) == StackType.SEQUENCE){
-
-            StackSequence cardStack = sequenceStacks.get(stackID);
-
-            List<StackSequence> sequences = cardStack.remove(getFreeStackID(), card);
-
-            removeStack(cardStack);
-    
-            for(StackSequence sequence : sequences){
-                addStack(sequence);
-            }         
-
+            sequenceStacks.get(stackID).remove(card);
         }else{
-
             colorStacks.get(stackID).remove(card);
         }
-
     }
 
     public void addCardInStack(int stackID, Card card){
@@ -351,6 +389,16 @@ public class Game {
 
             colorStacks.get(stackID).addCard(card);
         }          
+    }
+
+    public void removeStack(int stackID){
+
+        if(this.stacks.get(stackID) == StackType.SEQUENCE){
+            removeStack(this.sequenceStacks.get(stackID));
+        }else if(this.stacks.get(stackID) == StackType.COLOR){
+            removeStack(this.colorStacks.get(stackID));
+        }
+        stacks.remove(stackID);
     }
 
     public void removeStack(StackSequence stack){
