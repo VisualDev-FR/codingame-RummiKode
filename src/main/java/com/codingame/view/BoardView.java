@@ -65,8 +65,6 @@ public class BoardView {
 
             for (int col = 0; col < board[0].length; col++) { 
 
-                System.err.printf("%s, %s\n", row, col);
-
                 if(board[row][col] == null){
                     nullCount++;
                 }else{

@@ -6,36 +6,52 @@ import com.codingame.game.stack.StackColor;
 import com.codingame.game.stack.StackSequence;
 import com.codingame.game.stack.StackType;
 
-class Solution {
+class Boss2 {
 
+    public static int actionsLeft;
     public static int playerScore;
     public static boolean pushedFirstSequence;
+    public static List<Player> players;
+    private static Scanner in;
 
     public static void main(String args[]) throws Exception {
-        
-        Scanner in = new Scanner(System.in);
 
+        in = new Scanner(System.in);
+
+        List<String> playedActions = new ArrayList<String>();
+        
         while (true) {
+
+            System.err.println("Begin Turn\n");
+
+            players = new ArrayList<Player>();
+
+            int myPlayerIndex = in.nextInt();   // the index of your player
+            int playersCount = in.nextInt();    // the total number of player
+            int stacksCount = in.nextInt();        // the number of stacks pushed in the game
+            int drawCardsLeft = in.nextInt();
             
-            Player myPlayer = new Player();
+            for (int i = 0; i < playersCount; i++) {
+                
+                playerScore = in.nextInt();     // the score of the player i (your playerIndex will always be 0)
+                actionsLeft = in.nextInt();     // the remaining actions of the player i
+                
+                players.add(new Player(i, playerScore, actionsLeft));
+
+                String[] strCards = in.next().split(";");
+
+                for (int j = 0; j < strCards.length; j++) {
+                    players.get(i).addCard(strCards[j]);
+                }
+            }            
+
+            Player myPlayer = players.get(myPlayerIndex);
+
             Game game = new Game();
 
-            int cardsInHandCount = in.nextInt();
-            System.err.println("CardCount = " + cardsInHandCount);
-            
-            for (int i = 0; i < cardsInHandCount; i++) {
-                String card = in.next(); // <CardNumber_CardColor> ex : "08_BLUE"
-                myPlayer.addCard(card);
-            }
-            
-            int playersCount = in.nextInt(); // the total number of player
-            for (int i = 0; i < playersCount; i++) {
-                playerScore = in.nextInt(); // the score of the player i (your playerIndex will always be 0)
-            }
-
-            int n = in.nextInt(); if (in.hasNextLine()){in.nextLine();}            
-            
-            for (int i = 0; i < n; i++) {                
+            in.nextLine();
+            for (int i = 0; i < stacksCount ; i++) {                
+                
                 String[] stack = in.nextLine().split(" "); // <stack_id> <stack_type> <card_1> <card_2> ...
                 
                 System.err.println(String.join(" ", stack));
@@ -44,47 +60,83 @@ class Solution {
                 StackType stackType = StackType.values()[Integer.parseInt(stack[1])];
                 List<Card> cards = new ArrayList<Card>();
 
-                for (int j = 2; j < stack.length; j++) {
-                    
+                for (int j = 2; j < stack.length; j++) {                    
                     cards.add(new Card(stack[j]));
                 }
 
                 game.createStack(stackID, stackType, cards);
             }
 
+            System.err.println("Search action\n");
+
+            String action = "WAIT";
+
             String pushAction = myPlayer.getPushAction();
 
             if(pushAction != null){
-                System.out.println(pushAction);
+                
+                action = pushAction;
                 pushedFirstSequence = true;
+                playedActions = new ArrayList<String>();
+            
             }else if(pushedFirstSequence){
 
                 String addAction = myPlayer.getAddAction(game);
 
                 if(addAction != null){
-                    System.out.println(addAction);
+                
+                    action = addAction;
+                    //playedActions = new ArrayList<String>();
+                
                 }else{
-                    System.out.println("WAIT");
+
+                    String takeAction = myPlayer.getTakeAction(game);
+
+                    if(takeAction != null && actionsLeft > 0 && (!playedActions.contains(takeAction) || drawCardsLeft <= 0)){                
+                        action = takeAction;
+                        playedActions.add(takeAction);
+                        myPlayer.removeOneAction();
+                    }
                 }
             
-            }else{
-                System.out.println("WAIT");
             }
+
+            System.err.println("Action = " + action);
+
+            System.out.println(action);
         }
     }
 
     public static class Player{
 
+        /* 
+            WAIT
+            TAKE <stackID> <cardCode>
+            ADD <stackID> <cardCode>
+            PUSH <cardCode1>, <cardCode2>...
+            SPLIT <stackID> <cardCode_1> <cardCode_2>
+            JOIN <stackID_1> <stackID_2>
+            MOVE <stackID_From> <stackID_To> <cardCodeFrom>
+         */        
+
         public Stack<String> cardsInHand;
-        public int remainingActions;
         public boolean mustDraw;
         public boolean pushedFirstSequence;
+        public int actionsLeft;
+        public int index;
+        public int score;
 
-        public Player(){
+        public Player(int index, int score, int actionsLeft){
             this.cardsInHand = new Stack<String>();
-            this.remainingActions = 5;
             this.mustDraw = false;
             this.pushedFirstSequence = false;
+            this.actionsLeft = actionsLeft;
+            this.score = score;
+            this.index = index;
+        }
+
+        public void removeOneAction(){
+            this.actionsLeft--;
         }
 
         public void addCard(String strCard){
@@ -92,6 +144,8 @@ class Solution {
         }
 
         public String getAddAction(Game game){
+
+            System.err.println("Search AddAction");
 
             for(StackSequence sequence : game.sequenceStacks.values()){
                 for(String strCard : this.cardsInHand){
@@ -104,18 +158,22 @@ class Solution {
                     if(colorStack.canAdd(new Card(strCard))) return String.format("ADD %s %s", colorStack.getID(), strCard);
                 }
             }
-    
+            
+            System.err.println("No AddAction Found\n");
             return null;
         }
     
         public String getPushAction(){
+
+            System.err.println("Search PushAction");
             
             for(String strCard : this.cardsInHand){
                 
                 List<Card> cards = new ArrayList<Card>();
 
-                cards = getColorStack(new Card(strCard));
                 cards = getSequenceStack(new Card(strCard));
+
+                if(cards == null)  cards = getColorStack(new Card(strCard));
 
                 if(cards != null){
 
@@ -129,6 +187,39 @@ class Solution {
                 
                 }
             }
+            System.err.println("No PushAction Found\n");
+            return null;
+        }
+
+        public String getTakeAction(Game game){
+
+            System.err.println("Search TakeAction");
+
+            for(StackSequence sequenceStack : game.sequenceStacks.values()){
+
+                List<Card> takableCards = sequenceStack.getTakableCards();
+
+                for(Card card : takableCards){
+
+                    if(getSequenceStack(card) != null || getColorStack(card) != null){
+                        return String.format("TAKE %s %s", sequenceStack.getID(), card.getHashCode());
+                    }
+                }
+            }
+
+            for(StackColor colorStack : game.colorStacks.values()){
+
+                List<Card> takableCards = colorStack.getTakableCards();
+            
+                for(Card card : takableCards){
+
+                    if(getSequenceStack(card) != null || getColorStack(card) != null){
+                        return String.format("TAKE %s %s", colorStack.getID(), card.getHashCode());
+                    }
+                }            
+            }
+
+            System.err.println("No TakeAction found\n");
             return null;
         }
 

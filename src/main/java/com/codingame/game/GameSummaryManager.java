@@ -49,36 +49,46 @@ public class GameSummaryManager {
 
     // PLAYING SUMMARY
 
+    public void addLeftActions(Player player){
+        if(player.actionsLeft() > 0){
+            this.add("%s can still play %s actions", player.getNicknameToken(), player.actionsLeft());
+        }        
+    }
+
+    public void addWin(Player player){
+        this.add("%s wins. He has no remaining cards.", player.getNicknameToken());
+    }
+
     public void drawCard(Player player, int cardsLeft){
-        this.add("player %s draws one card, cards left in current draw = %s", player.getNicknameToken(), cardsLeft);
+        this.add("%s draws one card, cards left in current draw = %s", player.getNicknameToken(), cardsLeft);
     }
 
     public void pushStack(Player player, StackType stackType){
-        this.add("player %s pushes a new %sStack, he won't have to draw one card at the end of turn", player.getNicknameToken(), stackType.toString().toLowerCase());
+        this.add("%s pushes a new %s Stack.", player.getNicknameToken(), stackType.toString().toLowerCase());
     }
 
     public void takeCard(Player player, Card card, int cardStackID){
-        this.add("player %s takes card %s from stack %s", player.getNicknameToken(), card.getHashCode(), cardStackID);
+        this.add("%s takes card %s from stack %s", player.getNicknameToken(), card.getHashCode(), cardStackID);
     }
 
     public void addCardInStack(Player player, Card card, int cardStackID){
-        this.add("player %s adds card %s to stack %s, he won't have to draw one card at the end of turn", player.getNicknameToken(), card.getHashCode(), cardStackID);
+        this.add("%s adds card %s to stack %s.", player.getNicknameToken(), card.getHashCode(), cardStackID);
     }
 
     public void splitStack(Player player, int stackID, int newStackID){
-        this.add("player %s splits stack %s and create stack %s", player.getNicknameToken(), stackID, newStackID);
+        this.add("%s splits stack %s and create stack %s", player.getNicknameToken(), stackID, newStackID);
     }
 
     public void joinStack(Player player, int stackID, int oldStackID){
-        this.add("player %s merges stack %s into stack %s", player.getNicknameToken(), oldStackID, stackID);
+        this.add("%s merges stack %s into stack %s", player.getNicknameToken(), oldStackID, stackID);
     }
 
     public void moveCard(Player player, Card card, int stackFrom, int stackTo){
-        this.add("player %s moves card %s from stack %s to stack %s", player.getNicknameToken(), card.getHashCode(), stackFrom, stackTo);
+        this.add("%s moves card %s from stack %s to stack %s", player.getNicknameToken(), card.getHashCode(), stackFrom, stackTo);
     }
 
     public void wait(Player player){
-        this.add("player %s choose to do nothing", player.getNicknameToken());
+        this.add("%s choose to do nothing", player.getNicknameToken());
     }
 
 

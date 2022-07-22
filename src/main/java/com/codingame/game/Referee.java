@@ -75,9 +75,6 @@ public class Referee extends AbstractReferee {
     
             try {
                 parseCommands(player, player.getOutputs(), game);
-                if (player.isActive()) {
-                    game.performGameUpdate(player);
-                }
             } catch (TimeoutException e) {
                 deactivatePlayer(player, "Timeout!");
                 gameSummaryManager.addPlayerTimeout(player);
@@ -87,17 +84,31 @@ public class Referee extends AbstractReferee {
                 gameSummaryManager.addPlayerTimeout(player);
                 gameSummaryManager.addPlayerDisqualified(player);
             } 
-            
-            setNextPhase(player);
-            gameManager.addToGameSummary(gameSummaryManager.getSummary());
-            gameSummaryManager.clear();
     
-            view.update(player);
-            //view.refreshPlayersTooltips(game); // TODO: ajouter les tooltips
+            if (player.isActive()) {
+
+                /* System.err.println("isAdd = " + player.getAction().isAdd());
+                System.err.println("isJoin = " + player.getAction().isJoin());
+                System.err.println("isMove = " + player.getAction().isMove());
+                System.err.println("isPush = " + player.getAction().isPush());
+                System.err.println("isSplit = " + player.getAction().isSplit());
+                System.err.println("isTake = " + player.getAction().isTake());
+                System.err.println("isWait = " + player.getAction().isWait()); */
+
+                game.performGameUpdate(player);
+
+                setNextPhase(player);
+                gameManager.addToGameSummary(gameSummaryManager.getSummary());
+                gameSummaryManager.clear();   
+
+                view.update(player);
+                //view.refreshPlayersTooltips(game); // TODO: ajouter les tooltips
+            }
 
             gameOverFrame = game.isGameOver();
 
         }else{
+            gameManager.addToGameSummary(gameSummaryManager.getSummary());
             game.resetGameTurnData();
             game.performGameOver();
             gameManager.endGame();
@@ -111,9 +122,11 @@ public class Referee extends AbstractReferee {
     }
 
     private String escapeHTMLEntities(String message) {
-        return message
-                .replace("&lt;", "<")
-                .replace("&gt;", ">");
+        if(message != null){
+            return message.replace("&lt;", "<").replace("&gt;", ">");
+        }else{
+            return null;
+        }
     }    
 
     private void abort() {
@@ -137,11 +150,14 @@ public class Referee extends AbstractReferee {
         if(!activePlayer.canPlay(game)){
             switchToNextPlayer(activePlayer);
         }
+        else{
+            gameSummaryManager.addLeftActions(activePlayer);
+        }
     }
 
     private void switchToNextPlayer(Player player) {
 
-        if(player.hasToDraw()){
+        if(player.hasToDraw() && game.getDrawCards().size() > 0){
             Card drawedCard = player.drawCard(game);
             view.drawCard(player, drawedCard);
             gameSummaryManager.drawCard(player, game.getDrawCards().size());
@@ -163,6 +179,7 @@ public class Referee extends AbstractReferee {
         for (String command : lines) {
             try {
                 playedAction = parseCommand(player, command, game);
+                return playedAction;
             } catch (InvalidInputException e) {
                 gameSummaryManager.addPlayerBadCommand(player, e);
                 gameSummaryManager.addPlayerDisqualified(player);
@@ -174,7 +191,7 @@ public class Referee extends AbstractReferee {
             }
         }
 
-        return playedAction;
+        return null;       
     }
 
     public Action parseCommand(Player player, String command, Game game) throws GameRuleException, InvalidInputException {
@@ -196,17 +213,26 @@ public class Referee extends AbstractReferee {
 
         }else if(checker.isTakeAction(command)){
 
+            System.err.println("TakeAction detected with command = " + command);
+
             TakeAction action = parseTakeAction(player, command);
             player.setAction(action);
             return action;
         
         }else if(checker.isAddAction(command)){
 
+            System.err.println("AddAction detected with command = " + command);
+
             AddAction action = parseAddAction(player, command);
             player.setAction(action);
+
+            System.err.println("isTake = " + player.getAction().isTake());
+
             return action;
         
         }else if(checker.isPushAction(command)){
+
+            System.err.println("PushAction detected with command = " + command);
 
             PushAction action = parsePushAction(player, command);            
             player.setAction(action);

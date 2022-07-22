@@ -5,28 +5,27 @@ import com.codingame.game.card.Card;
 public class TakeAction extends Action{
 
     private int stackID;
-    private int newStackID;
     private Card cardToTake;
     private boolean doesMakeNewStack;
+    private SplitAction splitAction;
 
     public TakeAction(int stackID, Card cardToTake){
         this.stackID = stackID;
         this.cardToTake = cardToTake;
         this.doesMakeNewStack = false;
-        this.newStackID = -1;
     }
 
     public boolean doesMakeNewStack(){
         return this.doesMakeNewStack;
     }
 
-    public void setNewStackID(int newStackID){
-        this.newStackID = newStackID;
+    public void setSplitAction(SplitAction splitAction){
+        this.splitAction = splitAction;
         this.doesMakeNewStack = true;
     }
 
-    public int getNewStackID(){
-        return this.newStackID;
+    public SplitAction getSplitAction(){
+        return this.splitAction;
     }
 
     public int getStackID() {

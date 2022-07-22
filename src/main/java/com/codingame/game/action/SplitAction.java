@@ -14,8 +14,9 @@ public class SplitAction extends Action {
 
     public SplitAction(int stackID, int newStackID, Card card1, Card card2) {
         this.stackID = stackID;
+        this.newStackID = newStackID;
         this.card1 = card1;
-        this.card2 = card2;
+        this.card2 = card2;        
     }
 
     public void setStacks(StackSequence[] stacks){

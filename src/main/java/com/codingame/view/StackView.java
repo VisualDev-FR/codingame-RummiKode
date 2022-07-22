@@ -27,6 +27,7 @@ public class StackView {
             return this.cardViews.get(String.format("%s %s", card.getHashCode(), 1));
         }
         
+        assert false : "card not Found";
         return null;
     }
 
@@ -82,5 +83,9 @@ public class StackView {
 
     public int[] getPosition(){
         return new int[]{this.cardViews.firstEntry().getValue().getRow(), this.cardViews.firstEntry().getValue().getCol()};
+    }
+
+    public String toString(){
+        return this.cardViews.keySet().toString();
     }
 }

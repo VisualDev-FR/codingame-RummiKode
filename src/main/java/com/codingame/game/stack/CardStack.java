@@ -46,10 +46,6 @@ public class CardStack{
         return String.format("%s %s %s", this.ID, this.getType().ordinal(), String.join(" ", inputs.toArray(new String[0])));
     }
 
-/*     protected void addIfBonus(Card card){
-        if(card.isBonus()) this.bonusCardCount++;
-    } */
-
     protected void removeIfBonus(Card card){
         if(card.isBonus()) this.bonusCardCount--;
     }
@@ -73,5 +69,10 @@ public class CardStack{
 
     public boolean containsCard(Card card){
         return this.cards.containsKey(card.getHashCode());
+    }
+
+    @Override
+    public String toString(){
+        return String.format("%s : %s (%s)", this.ID, this.cards.keySet().toString(), this.type.toString());
     }
 }

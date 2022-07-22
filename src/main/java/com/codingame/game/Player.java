@@ -65,7 +65,7 @@ public class Player extends AbstractMultiplayerPlayer {
             strCards[i] = cardsInHand.get(i);
         }
         
-        return String.join(" ", strCards);    
+        return String.join(";", strCards);    
     }
 
     public int cardsCount(){

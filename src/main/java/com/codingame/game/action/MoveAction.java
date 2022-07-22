@@ -8,28 +8,27 @@ public class MoveAction extends Action {
     private int stackID_To;
     private Card cardToMove;
     private boolean doesMakeNewStack;
-    private int newStackID; 
+    private SplitAction splitAction;
 
     public MoveAction(int stackFrom, int stackTo, Card card){
         this.stackID_From = stackFrom;
         this.stackID_To = stackTo;
         this.cardToMove = card;
         this.doesMakeNewStack = false;
-        this.newStackID = - 1;
     }
 
     public boolean doesMakeNewStack(){
         return this.doesMakeNewStack;
     }
 
-    public void setNewStackID(int newStackID){
-        this.newStackID = newStackID;
+    public void setSplitAction(SplitAction splitAction){
+        this.splitAction = splitAction;
         this.doesMakeNewStack = true;
     }  
-    
-    public int getNewStackID(){
-        return this.newStackID;
-    }    
+
+    public SplitAction getSplitAction(){
+        return this.splitAction;
+    }
 
     public int getStackID_From() {
         return this.stackID_From;

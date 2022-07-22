@@ -27,10 +27,10 @@ public class SkeletonMain {
 
         MultiplayerGameRunner gameRunner = new MultiplayerGameRunner();
 
-        gameRunner.addAgent(Solution.class);
-        gameRunner.addAgent(Solution.class);
+        gameRunner.addAgent(Boss2.class);
+        gameRunner.addAgent(Boss2.class);
 
-        //gameRunner.setSeed(6209386355918829359L); // superposition tour 141 / 161
+        //gameRunner.setSeed(4984334168874238715L); // referee mistake on takable cards at turn 203
 
         gameRunner.start();
 

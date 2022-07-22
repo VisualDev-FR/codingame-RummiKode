@@ -1,22 +1,23 @@
 gameloop
-
-read cardsInHandCount:int
-loop cardsInHandCount read card:word(256)
-
-read playersCount:int
-loop playersCount read playerScore:int
-
-read n:int
-loop n read stack:string(256)
-
+read myPlayerIndex:int playersCount:int stacksCount:int drawCardsCount:int
+loop playersCount read nbCards:int actionsLeft:int cards:word(1100)
+loop stacksCount read stack:string(1100)
 write WAIT
 
 INPUT
-card: <CardNumber_CardColor> ex : "08_BLUE"
-stack: <stack_id> <stack_type> <card_1> <card_2> ...
-playerScore: the score of the player i (your playerIndex will always be 0)
-stackCount: the number of stacks pushed in the game, at the begin of the game, it always equals to 0
-playersCount: the total number of player
+myPlayerIndex: the index of your player
+playersCount: the total amount of players
+stacksCount: the amount of stacks pushed in the game
+cards: a comma-sparated string containing all player i cards : <Card1>;<Card2>;... ex : "08_BLUE;01_GREEN;..."
+stack: a string containing the description of a stack : <stack_id> <stack_type> <card_1> <card_2> ...
+actionsLeft : the remaining actions of the player i
+nbCards: the amount of cards for player i
+drawCardsCount: the amount of cards left in the common draw
+
+STATEMENT
+a card is always given by his number (two digits), an underscore and his color. ex : 08_BLUE
+the format you give the card number doesn't matter, but you must give the number before the color, and separate them by an underscore
+you don't have to sort your cards or your stacks to send your outputs instructions
 
 OUTPUT
 WAIT 

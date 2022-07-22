@@ -22,12 +22,10 @@ public class StackSequence extends CardStack{
         this.sequenceEnd = -1;
 
         for(Card card : cards){
-
-            //this.addIfBonus(card);
             this.cards.put(card.getHashCode(), card);
-            this.sequenceStart = Math.min(this.sequenceStart, card.getNumber());
-            this.sequenceEnd = Math.max(this.sequenceEnd, card.getNumber());
         }
+
+        this.resetBounds();
     }
 
     public List<Card> getTakableCards(){
@@ -50,10 +48,8 @@ public class StackSequence extends CardStack{
     }
     
     public void addCard(Card card){
-
-        this.sequenceStart = Math.min(this.sequenceStart, card.getNumber());
-        this.sequenceEnd = Math.max(this.sequenceEnd, card.getNumber());
         this.cards.put(card.getHashCode(), card);
+        this.resetBounds();
     }
 
     public StackSequence[] split(int newID, int card_1, int card_2){
@@ -108,7 +104,13 @@ public class StackSequence extends CardStack{
     }
 
     public void remove(Card cardToRemove){
-        this.cards.remove(cardToRemove.getHashCode());        
+        this.cards.remove(cardToRemove.getHashCode());
+        this.resetBounds();
+    }
+
+    private void resetBounds(){
+        this.sequenceStart = this.cards.firstEntry().getValue().getNumber();
+        this.sequenceEnd = this.cards.lastEntry().getValue().getNumber();
     }
 
     public boolean canAdd(Card card){
@@ -124,7 +126,7 @@ public class StackSequence extends CardStack{
 
             // if the cardNumber is between two sequence bounds, the card can only be removed if the two new stacks contain at least <Config.MIN_CARDS_TO_SPLIT> cards
             
-            canRemove = card.getNumber() - this.sequenceStart > minCards && this.sequenceEnd - card.getNumber() > minCards; 
+            canRemove = card.getNumber() - this.sequenceStart >= minCards && this.sequenceEnd - card.getNumber() >= minCards; 
         
         }else if(card.getNumber() == this.sequenceStart || card.getNumber() == this.sequenceEnd){
 
@@ -146,4 +148,5 @@ public class StackSequence extends CardStack{
     public int getLastNumber(){
         return sequenceEnd;
     }
+
 }   

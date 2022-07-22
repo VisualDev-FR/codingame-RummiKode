@@ -15,15 +15,6 @@ public class StackColor extends CardStack{
     
     boolean[] colors;
 
-    /* public StackColor(int stackID, int number){
-        
-        this.cards = new HashMap<String, Card>();
-        this.ID = stackID;
-        this.type = StackType.COLOR;
-        this.stackNumber = number;
-        this.colors = new boolean[MAX_STACK_LENGHT];
-    } */
-
     public StackColor(int stackID, List<Card> cards){
         
         this.cards = new TreeMap<String, Card>();
@@ -39,20 +30,9 @@ public class StackColor extends CardStack{
         }
     }
 
-    public boolean addCard(Card card){
-
-        int colorRank = card.getColor().ordinal();
-
-        if(canAdd(card)){
-            //this.addIfBonus(card);
-            this.cards.put(card.getHashCode(), card);
-            this.colors[colorRank] = true;
-            return true;
-        }else{
-            //throw new Exception(String.format("StackColor.addCard : the card %s cannot be added to the stack", card.getHashCode()));
-            assert false : String.format("StackColor.addCard : the card %s cannot be added to the stack", card.getHashCode());
-            return false;
-        }
+    public void addCard(Card card){
+        this.cards.put(card.getHashCode(), card);
+        this.colors[card.getColor().ordinal()] = true;
     }
 
     public List<Card> getTakableCards(){
@@ -67,7 +47,7 @@ public class StackColor extends CardStack{
     }    
 
     public void remove(Card card){
-        this.removeIfBonus(card);
+        //this.removeIfBonus(card);
         this.cards.remove(card.getHashCode());
         this.colors[card.getColor().ordinal()] = false;
     }

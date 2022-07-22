@@ -1,5 +1,6 @@
 package com.codingame.view;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,7 @@ public class View {
     final static int STACK_SIZE = 110;
     final static int BOARD_OFFSET = 20;
     final static int DRAW_HEIGHT = 3;
+    final static int SCORE_WIDTH = 30;
 
     final static int BOARD_ROWS = 11;
     final static int BOARD_COLUMNS = 26;
@@ -65,7 +67,7 @@ public class View {
         initBackGround();
         //DisplayGrid();
         initSprites(game, game.getPlayers());
-        initDraws(game.playersCount());
+        initDraws(game.getPlayers());
 
         // ! \\ CODE AFTER THIS LINES
     }
@@ -73,7 +75,7 @@ public class View {
     public void update(Player player){
 
         if (player.getAction().isMove()) {
-            this.moveCard(player);
+            this.moveCard((MoveAction) player.getAction());
         }
         else if (player.getAction().isTake()) {
             this.takeCard(player);
@@ -85,10 +87,10 @@ public class View {
             this.pushStack(player);
         }
         else if (player.getAction().isSplit()) {
-            this.splitStack(player);
+            this.splitStack((SplitAction) player.getAction());
         }
         else if (player.getAction().isJoin()) {
-            this.joinStack(player);
+            this.joinStack((JoinAction) player.getAction());
         }
     }
 
@@ -152,9 +154,12 @@ public class View {
         }     
     }
 
-    public void initDraws(int playersCount){
+    public void initDraws(List<Player> players){
 
-        Sprite bluesStack = gem.createSprite().setImage("blue_stack.png");
+        // init the blue team sprites
+
+        //Sprite bluesStack = gem.createSprite().setImage("blue_stack.png"); //p.getAvatarToken()
+        Sprite bluesStack = gem.createSprite().setImage(players.get(0).getAvatarToken()); //p.getAvatarToken()
 
         int[] bluePlayerCoords = getPlayerCoords(0);
 
@@ -164,7 +169,27 @@ public class View {
         bluesStack.setBaseWidth(STACK_SIZE);
         bluesStack.setBaseHeight(STACK_SIZE);
 
-        Sprite yellowStack = gem.createSprite().setImage("yellow_stack.png");
+        /* Sprite blueScore_Empty = gem.createSprite();
+        Sprite blueScore = gem.createSprite().setImage("scorebar.png");
+        
+        blueScore_Empty
+            .setImage("scorebar_empty.png")
+            .setBaseHeight(STACK_SIZE)
+            .setBaseWidth(SCORE_WIDTH)
+            .setX(bluePlayerCoords[0] + STACK_SIZE/2 + 20 - SCORE_WIDTH / 2)
+            .setY(bluePlayerCoords[1] - STACK_SIZE / 2);
+
+        blueScore
+            .setImage("scorebar.png")
+            .setBaseHeight(STACK_SIZE - 10)
+            .setBaseWidth(SCORE_WIDTH - 10)
+            .setX(bluePlayerCoords[0] + STACK_SIZE/2 + 20 - SCORE_WIDTH / 2 + 5)
+            .setY(bluePlayerCoords[1] - STACK_SIZE / 2 + 5); */
+
+        // init the yellow team sprites
+
+        //Sprite yellowStack = gem.createSprite().setImage("yellow_stack.png");
+        Sprite yellowStack = gem.createSprite().setImage(players.get(1).getAvatarToken());
 
         int[] yellowPlayerCoords = getPlayerCoords(1);
 
@@ -172,7 +197,9 @@ public class View {
         yellowStack.setY(yellowPlayerCoords[1] - STACK_SIZE / 2);
 
         yellowStack.setBaseWidth(STACK_SIZE);
-        yellowStack.setBaseHeight(STACK_SIZE);  
+        yellowStack.setBaseHeight(STACK_SIZE); 
+        
+        // init the common draw sprites
         
         Sprite drawStack = gem.createSprite().setImage("draw_stack.png");
 
@@ -188,7 +215,7 @@ public class View {
 
     public void drawCard(Player player, Card card){
 
-        assert card != null : "/!\\ card is null :'(";
+        assert card != null : "card is null :'( ";
 
         CardView cardView = this.draws.get(-1).getCardView(card);
 
@@ -241,23 +268,24 @@ public class View {
         this.stackMap.put(cardView.getSpriteCode(), stackID);
 
         stackView.addCardView(cardView);
+
+        System.err.println(stackView.toString());
         removeSpriteFromDraw(cardView.getSpriteCode(), drawIndex);
 
         board.update(this);
     }
 
-    public void splitStack(Player player){
-
-        SplitAction splitAction = (SplitAction) player.getAction();
+    public void splitStack(SplitAction splitAction){
 
         int stackID = splitAction.getStackID();
         int newStackId = splitAction.getNewStackID();
 
+        StackSequence stack1 = splitAction.getStack1();
         StackSequence stack2 = splitAction.getStack2();
 
         this.stacks.put(newStackId, new StackView());
 
-        for(CardView cardView : this.stacks.get(stackID).getCardViews().values()){
+        for(CardView cardView : new ArrayList<CardView>(this.stacks.get(stackID).getCardViews().values())){
 
             String spriteCode = cardView.getSpriteCode();
 
@@ -268,14 +296,19 @@ public class View {
                 
                 removeSpriteFromStack(spriteCode, stackID);
             }
+
+            if(!stack1.containsCard(cardView.getCard())){
+                removeSpriteFromStack(spriteCode, stackID);
+            }
         }
+
+        System.err.println(stack1.toString());
+        System.err.println(stack2.toString());
 
         board.update(this);
     }
 
-    public void joinStack(Player player){
-        
-        JoinAction joinAction = (JoinAction) player.getAction();
+    public void joinStack(JoinAction joinAction){
 
         int stackID = joinAction.getStackID_1();
         int oldStackID = joinAction.getStackID_2();
@@ -295,26 +328,23 @@ public class View {
         board.update(this);
     }
 
-    public void moveCard(Player player){
-
-        MoveAction moveAction = (MoveAction) player.getAction();
+    public void moveCard(MoveAction moveAction){
 
         int stackFrom = moveAction.getStackID_From();
         int stackTo = moveAction.getStackID_To();
         Card cardToMove = moveAction.getCardToMove();
 
+        CardView cardViewToMove = this.stacks.get(stackFrom).getCardView(cardToMove);
+
+        String spriteCode = cardViewToMove.getSpriteCode();
+
+        this.stackMap.put(spriteCode, stackTo);
+        this.stacks.get(stackTo).addCardView(cardViewToMove);
+
+        removeSpriteFromStack(spriteCode, stackFrom);        
+
         if(moveAction.doesMakeNewStack()){
-            // TODO: Code this part 
-        }else{
-
-            CardView cardViewToMove = this.stacks.get(stackFrom).getCardView(cardToMove);
-
-            String spriteCode = cardViewToMove.getSpriteCode();
-
-            this.stackMap.put(spriteCode, stackTo);
-            this.stacks.get(stackTo).addCardView(cardViewToMove);
-
-            removeSpriteFromStack(spriteCode, stackFrom);
+            splitStack(moveAction.getSplitAction());
         }
 
         board.update(this);
@@ -328,18 +358,19 @@ public class View {
         Card cardToTake = takeAction.getCardToTake();
         int drawIndex = player.getIndex();
 
+        System.err.println("Stack " + stackID + " : " + this.stacks.get(stackID).toString() + " / " +  cardToTake.getHashCode());
+
+        CardView cardViewToTake = this.stacks.get(stackID).getCardView(cardToTake);
+
+        String spriteCode = cardViewToTake.getSpriteCode();
+
+        this.drawMap.put(spriteCode, drawIndex);
+        this.draws.get(drawIndex).addCardView(cardViewToTake);
+
+        removeSpriteFromStack(spriteCode, stackID);        
+
         if(takeAction.doesMakeNewStack()){
-            // TODO: Code this part 
-        }else{
-
-            CardView cardViewToTake = this.stacks.get(stackID).getCardView(cardToTake);
-
-            String spriteCode = cardViewToTake.getSpriteCode();
-
-            this.drawMap.put(spriteCode, drawIndex);
-            this.draws.get(drawIndex).addCardView(cardViewToTake);
-
-            removeSpriteFromStack(spriteCode, stackID);
+            splitStack(takeAction.getSplitAction());
         }
 
         board.update(this);
@@ -348,6 +379,8 @@ public class View {
     // SPRITE HANDLING
 
     public StackView getStackView(CardView cardView){
+
+        // will be usefull for implementation of tiptools, in order to display the stackIDs at screen
 
         String spriteCode = cardView.getSpriteCode();
 
