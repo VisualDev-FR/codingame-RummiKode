@@ -105,6 +105,13 @@ public class View {
         .setWidth(screenWidth)
         .setFillColor(BACK_COLOR);
 
+        /* int backWidth = GRID_COLUMNS * GRID_SIZE;
+        int backHeight = GRID_ROWS * GRID_SIZE;
+
+        gem.createSprite()
+            .setImage("background.png")
+            .setBaseWidth(backWidth)
+            .setBaseHeight(backHeight); */
         // DRAW
 
         gem.createRectangle()

@@ -12,6 +12,7 @@ import com.codingame.game.stack.StackType;
 import com.codingame.gameengine.core.AbstractReferee;
 import com.codingame.gameengine.core.MultiplayerGameManager;
 import com.codingame.gameengine.core.AbstractPlayer.TimeoutException;
+import com.codingame.gameengine.module.endscreen.EndScreenModule;
 import com.codingame.view.View;
 import com.google.inject.Inject;
 
@@ -19,6 +20,7 @@ public class Referee extends AbstractReferee {
 
     @Inject private GameSummaryManager gameSummaryManager;
     @Inject private MultiplayerGameManager<Player> gameManager;
+    @Inject private EndScreenModule endScreenModule;
     @Inject private Game game;
     @Inject private InputChecker checker;
     @Inject private View view;
@@ -118,7 +120,7 @@ public class Referee extends AbstractReferee {
     public void deactivatePlayer(Player player, String message) {
         //player.deactivate();
         player.deactivate(escapeHTMLEntities(message));
-        player.setScore(-1);
+        player.setScore(9999);
     }
 
     private String escapeHTMLEntities(String message) {
@@ -489,4 +491,20 @@ public class Referee extends AbstractReferee {
         }
     }
 
+    @Override
+    public void onEnd() {
+
+        List<Player> players = gameManager.getPlayers();
+    
+        int[] scores = new int[players.size()];
+
+        for(Player player : players){
+            scores[player.getIndex()] = player.getScore();
+        }
+
+        endScreenModule.setTitleRankingsSprite("logo.png");
+        
+        //endScreenModule.setScores(scores);
+        endScreenModule.setScores(gameManager.getPlayers().stream().mapToInt(p -> p.getScore()).toArray());
+    }
 }

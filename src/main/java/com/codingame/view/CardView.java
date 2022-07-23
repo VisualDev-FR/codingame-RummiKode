@@ -75,10 +75,8 @@ public class CardView {
 
     private int[] getCardCoords(int row, int col){
 
-        int coef = View.GRID_SIZE + View.GRID_SIZE / 2 - View.CARD_SIZE / 2;
-
-        int cardX = col * coef;
-        int cardY = row * coef;
+        int cardX = col * View.GRID_SIZE + View.GRID_SIZE / 2 - View.CARD_SIZE / 2;
+        int cardY = row * View.GRID_SIZE + View.GRID_SIZE / 2 - View.CARD_SIZE / 2;
 
         return new int[]{cardX, cardY};
     }    
