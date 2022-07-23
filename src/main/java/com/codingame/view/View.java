@@ -26,34 +26,33 @@ public class View {
 
     private int screenWidth;
     private int screenHeight;
+    private int playersCount;
+    private int playerWidth;
 
-    final int BACK_COLOR = 0x3b3d40;    
-    final int DRAW_COLOR = 0x787b80;
-    final int GRID_COLOR = 0x00FF00;
+    final static int BACK_COLOR = 0x3b3d40;    
+    final static int DRAW_COLOR = 0x787b80;
+    final static int GRID_COLOR = 0x00FF00;
 
     final static int GRID_SIZE = 76;
     final static int GRID_ROWS = 15;
     final static int GRID_COLUMNS = 26;
     final static int CARD_SIZE = 65;
-    final static int PLAYER_SIZE = 110;
-    final static int BOARD_OFFSET = 20;
-    final static int DRAW_HEIGHT = 3;
     final static int SCORE_WIDTH = 30;
-    final static int PLAYER_OFFSET_X = 70;
-    final static int PLAYER_OFFSET_Y = 40;
+
+    final static int PLAYER_HEIGHT = 110;
+    final static int AVATAR_SIZE = 110;
+    final static int PLAYER_OFFSET = 20;
 
     final static int BOARD_ROWS = 11;
     final static int BOARD_COLUMNS = 26;
 
-    private int playersCount;
-
-    private BoardView board;    
+    private BoardView board;
 
     private Map<String, Integer> stackMap;
     private Map<String, Integer> drawMap;
-
     private Map<Integer, StackView> stacks;
     private Map<Integer, StackView> draws;
+    private Map<Integer, PlayerView> playerViews;
 
     public void init(Game game){
 
@@ -64,11 +63,11 @@ public class View {
 
         this.stackMap = new HashMap<String, Integer>();
         this.drawMap = new HashMap<String, Integer>();
-
         this.stacks = new HashMap<Integer, StackView>();
         this.draws = new HashMap<Integer, StackView>();
-
-        this.playersCount = game.getPlayers().size();
+         
+        this.playerViews = new HashMap<Integer, PlayerView>();
+        this.playersCount = game.getPlayers().size();       
 
         initBackGround();
         //DisplayGrid();
@@ -79,6 +78,8 @@ public class View {
     }
 
     public void update(Player player){
+
+        updateScoreBar(player);
 
         if (player.getAction().isMove()) {
             this.moveCard((MoveAction) player.getAction());
@@ -100,6 +101,10 @@ public class View {
         }
     }
 
+    private void updateScoreBar(Player player){
+        playerViews.get(player.getIndex()).setScore(player.cardsCount());
+    }
+
     // INITIALIZE
 
     public void initBackGround(){
@@ -110,15 +115,6 @@ public class View {
         .setHeight(screenHeight)
         .setWidth(screenWidth)
         .setFillColor(BACK_COLOR);
-
-        /* int backWidth = GRID_COLUMNS * GRID_SIZE;
-        int backHeight = GRID_ROWS * GRID_SIZE;
-
-        gem.createSprite()
-            .setImage("background.png")
-            .setBaseWidth(backWidth)
-            .setBaseHeight(backHeight); */
-        // DRAW
     }
 
     public void initSprites(Game game, List<Player> players){
@@ -134,6 +130,7 @@ public class View {
 
             CardView cardView = new CardView(gem, card, spriteIndex);
 
+            cardView.hide();
             cardView.setCoords(spriteX, spriteY);
 
             drawMap.put(cardView.getSpriteCode(), -1);
@@ -153,6 +150,7 @@ public class View {
 
                 CardView cardView = new CardView(gem, card, spriteIndex);
                 
+                cardView.hide();
                 cardView.setCoords(playerCoords[0] - CARD_SIZE / 2, playerCoords[1]  - CARD_SIZE / 2);
 
                 drawMap.put(cardView.getSpriteCode(), player.getIndex());
@@ -163,56 +161,29 @@ public class View {
 
     public void initPlayers(List<Player> players){
 
+        this.playerWidth = (screenWidth - 2 * PLAYER_OFFSET) / this.playersCount;
+
         for(Player player : players){
 
             int[] playerCoords = getPlayerCoords(player.getIndex());
-    
-            initPlayer(player, playerCoords[0], playerCoords[1]);
+
+            PlayerView playerView = new PlayerView(gem, player, players.size(), playerCoords[0], playerCoords[1], this.playerWidth, PLAYER_HEIGHT);
+            
+            playerViews.put(player.getIndex(), playerView);
         }
-
-        // init the common draw sprites
-        
-        Sprite drawStack = gem.createSprite().setImage("draw_stack.png");
-
-        drawStack.setX((screenWidth / 2) - PLAYER_SIZE / 2);
-        drawStack.setY(getPlayerCoords(0)[1] - PLAYER_SIZE / 2);
-
-        drawStack.setBaseWidth(PLAYER_SIZE);
-        drawStack.setBaseHeight(PLAYER_SIZE);
-
-    }
-
-    public void initPlayer(Player player, int xCoord, int yCoord){
-
-        // init the player BackGround
-
-        int offset = 10;
-
-        gem.createRectangle()
-            .setX(xCoord - PLAYER_SIZE / 2 - offset / 2)
-            .setY(yCoord - PLAYER_SIZE / 2 - offset / 2)
-            .setHeight(PLAYER_SIZE + offset)
-            .setWidth(PLAYER_SIZE + offset)
-            .setFillColor(BACK_COLOR);
-        
-        // init the player
-
-        Sprite playerSprite = gem.createSprite().setImage(player.getAvatarToken()); //p.getAvatarToken()
-
-        playerSprite.setX(xCoord - PLAYER_SIZE / 2);
-        playerSprite.setY(yCoord - PLAYER_SIZE / 2);
-
-        playerSprite.setBaseWidth(PLAYER_SIZE);
-        playerSprite.setBaseHeight(PLAYER_SIZE);
     }
 
     // PLAYS VIEWER
 
     public void drawCard(Player player, Card card){
 
+        updateScoreBar(player);
+
         assert card != null : "card is null :'( ";
 
         CardView cardView = this.draws.get(-1).getCardView(card);
+
+        cardView.hide();
 
         this.drawMap.put(cardView.getSpriteCode(), player.getIndex());
         this.draws.get(player.getIndex()).addCardView(cardView);
@@ -411,6 +382,12 @@ public class View {
         return this.draws;
     }
     
+    // DISPLAY ON-HOVER HANDLING
+
+    public void refreshPlayersTooltips(Game game){
+        
+    }    
+
     // GRID HANDLING
 
     public void DisplayGrid(){
@@ -450,10 +427,8 @@ public class View {
 
     public int[] getPlayerCoords(int playerIndex){
 
-        int spaceBetweenPlayers = (screenWidth - 2 * PLAYER_OFFSET_X) / (this.playersCount - 1);
-
-        int playerX = PLAYER_OFFSET_X + playerIndex * spaceBetweenPlayers;
-        int playerY = screenHeight - PLAYER_OFFSET_Y - PLAYER_SIZE / 2;
+        int playerX = this.playerWidth * playerIndex + AVATAR_SIZE / 2 + PLAYER_OFFSET;
+        int playerY = screenHeight - PLAYER_HEIGHT / 2 - AVATAR_SIZE / 2;
 
         return new int[] {playerX, playerY};
     }

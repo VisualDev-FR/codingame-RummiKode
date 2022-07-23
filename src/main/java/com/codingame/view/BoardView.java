@@ -30,6 +30,7 @@ public class BoardView {
                 int[] cardCoords = view.getPlayerCoords(i);
 
                 cardView.setCoords(cardCoords[0] - View.CARD_SIZE / 2, cardCoords[1] - View.CARD_SIZE / 2);
+                cardView.show();
             }
         }
     }

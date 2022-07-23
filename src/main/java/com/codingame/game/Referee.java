@@ -16,11 +16,14 @@ import com.codingame.gameengine.module.endscreen.EndScreenModule;
 import com.codingame.view.View;
 import com.google.inject.Inject;
 
+import view.modules.DisplayOnHoverModule;
+
 public class Referee extends AbstractReferee {
 
     @Inject private GameSummaryManager gameSummaryManager;
     @Inject private MultiplayerGameManager<Player> gameManager;
     @Inject private EndScreenModule endScreenModule;
+    @Inject private DisplayOnHoverModule displayOnHoverModule;    
     @Inject private Game game;
     @Inject private InputChecker checker;
     @Inject private View view;
@@ -104,7 +107,7 @@ public class Referee extends AbstractReferee {
                 gameSummaryManager.clear();   
 
                 view.update(player);
-                //view.refreshPlayersTooltips(game); // TODO: ajouter les tooltips
+                view.refreshPlayersTooltips(game); // TODO: ajouter les tooltips
             }
 
             gameOverFrame = game.isGameOver();
@@ -507,71 +510,68 @@ public class Referee extends AbstractReferee {
             int cardCount = player.cardsCount();
             int playsCount = player.getPlays();            
 
-            if(!scoreMap.containsKey(cardCount)){
-                scoreMap.put(cardCount, new TreeMap<Integer,  List<Integer>>());
-            }
+            scoreMap.putIfAbsent(cardCount, new TreeMap<Integer,  List<Integer>>());
+            scoreMap.get(cardCount).putIfAbsent(playsCount, new ArrayList<Integer>());
 
-            scoreMap.get(cardCount).put(playsCount, new ArrayList<Integer>());
             scoreMap.get(cardCount).get(playsCount).add(playerIndex);
         }   
 
+        for(int card : scoreMap.keySet()){
+
+            System.err.println("Card count = " + card);
+
+            for(int play : scoreMap.get(card).keySet()){
+
+                System.err.println("  Plays count = " + play);
+
+                for(int index : scoreMap.get(card).get(play)){
+
+                    System.err.println("    PLAYER INDEX = " + index);
+                }
+            }
+        }
+
         int maxScore = 4;
 
-        for(Integer score : scoreMap.keySet()){
+        for(int cardCount : scoreMap.keySet()){
 
-            if(scoreMap.get(score).size() > 1){ // more than 1 player have the same cards count -> we check the plays count for each player
+            for(int playsCount : scoreMap.get(cardCount).keySet()){
 
-                for(int playsCount : scoreMap.get(score).keySet()){
+                List<Integer> playerList = scoreMap.get(cardCount).get(playsCount);
 
-                    List<Integer> playerList = scoreMap.get(score).get(playsCount);
+                if(playerList.size() > 1){ // more than 1 player have the same card count, and the same plays count -> it's a tie
 
-                    if(playerList.size() > 1){ // more than 1 player have the same card count, and the same plays count -> it's a tie
-
-                        for(int playerIndex : playerList){
-
-                            if(players.get(playerIndex).isActive()){
-                                scores[playerIndex] = maxScore;
-                                scoreDescription[playerIndex] = String.format("%s cards left, %s plays", score, playsCount);
-                                // we dont decrease the score here, in order to give the same score to all playerList, we will decrease it at the end of the loop
-                            }
-                            else{
-                                scores[playerIndex] = -1;
-                                scoreDescription[playerIndex] = "Disqualified";
-                            }
-                        }
-                        maxScore--;
-
-                    }else{  // there is only one player with this plays count -> next ranking
-
-                        int playerIndex = playerList.get(0);
+                    for(int playerIndex : playerList){
 
                         if(players.get(playerIndex).isActive()){
                             scores[playerIndex] = maxScore;
-                            scoreDescription[playerIndex] = String.format("%s cards left, %s plays", score, playsCount);
-                            maxScore--;
+                            scoreDescription[playerIndex] = String.format("%s cards left, %s plays", cardCount, playsCount);
+                            // we dont decrease the score here, in order to give the same score to all playerList, we will decrease it at the end of the loop
                         }
                         else{
                             scores[playerIndex] = -1;
                             scoreDescription[playerIndex] = "Disqualified";
                         }
                     }
-
-                     
-                }
-            }
-            else{ // only one player have this cards count -> next ranking
-
-                int playerIndex = scoreMap.get(score).firstEntry().getValue().get(0);
-
-                if(players.get(playerIndex).isActive()){
-                    scores[playerIndex] = maxScore;
-                    scoreDescription[playerIndex] = String.format("%s cards left", score);
                     maxScore--;
+
+                }else{  // there is only one player with this cards count and this plays count -> next ranking
+
+                    int playerIndex = playerList.get(0);
+
+                    if(players.get(playerIndex).isActive()){
+                        scores[playerIndex] = maxScore;
+                        scoreDescription[playerIndex] = scoreMap.get(cardCount).size() > 1 ?
+                            String.format("%s cards left, %s plays", cardCount, playsCount) :
+                            String.format("%s cards left", cardCount);
+                        
+                        maxScore--;
+                    }
+                    else{
+                        scores[playerIndex] = -1;
+                        scoreDescription[playerIndex] = "Disqualified";
+                    }
                 }
-                else{
-                    scores[playerIndex] = -1;
-                    scoreDescription[playerIndex] = "Disqualified";
-                }                
             }
         }
 
