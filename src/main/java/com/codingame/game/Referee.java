@@ -497,14 +497,84 @@ public class Referee extends AbstractReferee {
         List<Player> players = gameManager.getPlayers();
     
         int[] scores = new int[players.size()];
+        String[] scoreDescription = new String[players.size()];
+
+        TreeMap<Integer, TreeMap<Integer, List<Integer>>> scoreMap = new TreeMap<Integer, TreeMap<Integer,  List<Integer>>>();
 
         for(Player player : players){
-            scores[player.getIndex()] = player.getScore();
+
+            int playerIndex = player.getIndex();
+            int cardCount = player.cardsCount();
+            int playsCount = player.getPlays();            
+
+            if(!scoreMap.containsKey(cardCount)){
+                scoreMap.put(cardCount, new TreeMap<Integer,  List<Integer>>());
+            }
+
+            scoreMap.get(cardCount).put(playsCount, new ArrayList<Integer>());
+            scoreMap.get(cardCount).get(playsCount).add(playerIndex);
+        }   
+
+        int maxScore = 4;
+
+        for(Integer score : scoreMap.keySet()){
+
+            if(scoreMap.get(score).size() > 1){ // more than 1 player have the same cards count -> we check the plays count for each player
+
+                for(int playsCount : scoreMap.get(score).keySet()){
+
+                    List<Integer> playerList = scoreMap.get(score).get(playsCount);
+
+                    if(playerList.size() > 1){ // more than 1 player have the same card count, and the same plays count -> it's a tie
+
+                        for(int playerIndex : playerList){
+
+                            if(players.get(playerIndex).isActive()){
+                                scores[playerIndex] = maxScore;
+                                scoreDescription[playerIndex] = String.format("%s cards left, %s plays", score, playsCount);
+                                // we dont decrease the score here, in order to give the same score to all playerList, we will decrease it at the end of the loop
+                            }
+                            else{
+                                scores[playerIndex] = -1;
+                                scoreDescription[playerIndex] = "Disqualified";
+                            }
+                        }
+                        maxScore--;
+
+                    }else{  // there is only one player with this plays count -> next ranking
+
+                        int playerIndex = playerList.get(0);
+
+                        if(players.get(playerIndex).isActive()){
+                            scores[playerIndex] = maxScore;
+                            scoreDescription[playerIndex] = String.format("%s cards left, %s plays", score, playsCount);
+                            maxScore--;
+                        }
+                        else{
+                            scores[playerIndex] = -1;
+                            scoreDescription[playerIndex] = "Disqualified";
+                        }
+                    }
+
+                     
+                }
+            }
+            else{ // only one player have this cards count -> next ranking
+
+                int playerIndex = scoreMap.get(score).firstEntry().getValue().get(0);
+
+                if(players.get(playerIndex).isActive()){
+                    scores[playerIndex] = maxScore;
+                    scoreDescription[playerIndex] = String.format("%s cards left", score);
+                    maxScore--;
+                }
+                else{
+                    scores[playerIndex] = -1;
+                    scoreDescription[playerIndex] = "Disqualified";
+                }                
+            }
         }
 
-        endScreenModule.setTitleRankingsSprite("logo.png");
-        
-        //endScreenModule.setScores(scores);
-        endScreenModule.setScores(gameManager.getPlayers().stream().mapToInt(p -> p.getScore()).toArray());
+        endScreenModule.setScores(scores, scoreDescription);
     }
 }

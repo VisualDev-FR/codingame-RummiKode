@@ -22,8 +22,6 @@ class Boss2 {
         
         while (true) {
 
-            System.err.println("Begin Turn\n");
-
             players = new ArrayList<Player>();
 
             int myPlayerIndex = in.nextInt();   // the index of your player
@@ -46,6 +44,8 @@ class Boss2 {
             }            
 
             Player myPlayer = players.get(myPlayerIndex);
+
+            System.err.println("myScore = " + myPlayer.score);
 
             Game game = new Game();
 

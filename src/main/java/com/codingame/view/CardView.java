@@ -48,6 +48,14 @@ public class CardView {
         this.setCoords(spriteCoords[0], spriteCoords[1]);
     }
 
+    public void show(){
+        this.sprite.setVisible(true);
+    }
+
+    public void hide(){
+        this.sprite.setVisible(false);
+    }
+
     public void setCoords(int x, int y) {
         this.sprite.setX(x);
         this.sprite.setY(y);

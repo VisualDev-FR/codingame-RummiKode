@@ -29,8 +29,10 @@ public class SkeletonMain {
 
         gameRunner.addAgent(Boss2.class);
         gameRunner.addAgent(Boss2.class);
+        gameRunner.addAgent(Boss2.class);
+        gameRunner.addAgent(Boss2.class);
 
-        //gameRunner.setSeed(4984334168874238715L); // referee mistake on takable cards at turn 203
+        gameRunner.setSeed(3453794771752566333L); // referee doesn't give score to player 0
 
         gameRunner.start();
 

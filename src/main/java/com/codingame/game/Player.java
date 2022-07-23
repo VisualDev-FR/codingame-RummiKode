@@ -22,6 +22,7 @@ public class Player extends AbstractMultiplayerPlayer {
     private boolean mustDraw;
     private boolean pushedFirstStack;
     private String message;
+    private int plays;
 
     @Override
     public int getExpectedOutputLines() {
@@ -108,6 +109,11 @@ public class Player extends AbstractMultiplayerPlayer {
 
     public void removeOnePlay(){
         remainingActions--;
+        plays++;
+    }
+
+    public int getPlays(){
+        return this.plays;
     }
 
     public void setAction(Action action){        

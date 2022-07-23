@@ -35,13 +35,17 @@ public class View {
     final static int GRID_ROWS = 15;
     final static int GRID_COLUMNS = 26;
     final static int CARD_SIZE = 65;
-    final static int STACK_SIZE = 110;
+    final static int PLAYER_SIZE = 110;
     final static int BOARD_OFFSET = 20;
     final static int DRAW_HEIGHT = 3;
     final static int SCORE_WIDTH = 30;
+    final static int PLAYER_OFFSET_X = 70;
+    final static int PLAYER_OFFSET_Y = 40;
 
     final static int BOARD_ROWS = 11;
     final static int BOARD_COLUMNS = 26;
+
+    private int playersCount;
 
     private BoardView board;    
 
@@ -64,10 +68,12 @@ public class View {
         this.stacks = new HashMap<Integer, StackView>();
         this.draws = new HashMap<Integer, StackView>();
 
+        this.playersCount = game.getPlayers().size();
+
         initBackGround();
         //DisplayGrid();
         initSprites(game, game.getPlayers());
-        initDraws(game.getPlayers());
+        initPlayers(game.getPlayers());
 
         // ! \\ CODE AFTER THIS LINES
     }
@@ -113,12 +119,6 @@ public class View {
             .setBaseWidth(backWidth)
             .setBaseHeight(backHeight); */
         // DRAW
-
-        gem.createRectangle()
-        .setY((GRID_ROWS - DRAW_HEIGHT) * GRID_SIZE)
-        .setHeight((DRAW_HEIGHT + 1) * GRID_SIZE)
-        .setWidth(screenWidth)
-        .setFillColor(DRAW_COLOR);
     }
 
     public void initSprites(Game game, List<Player> players){
@@ -130,7 +130,7 @@ public class View {
             int spriteIndex = drawMap.containsKey(String.format("%s %s", card.getHashCode(), 0)) ? 1 : 0;
 
             int spriteX = (screenWidth - CARD_SIZE) / 2;
-            int spriteY = (screenHeight + (GRID_ROWS - DRAW_HEIGHT) * GRID_SIZE) / 2  - CARD_SIZE / 2;   
+            int spriteY = getPlayerCoords(0)[1] - CARD_SIZE / 2;   
 
             CardView cardView = new CardView(gem, card, spriteIndex);
 
@@ -152,7 +152,7 @@ public class View {
                 int[] playerCoords = getPlayerCoords(player.getIndex());
 
                 CardView cardView = new CardView(gem, card, spriteIndex);
-
+                
                 cardView.setCoords(playerCoords[0] - CARD_SIZE / 2, playerCoords[1]  - CARD_SIZE / 2);
 
                 drawMap.put(cardView.getSpriteCode(), player.getIndex());
@@ -161,61 +161,49 @@ public class View {
         }     
     }
 
-    public void initDraws(List<Player> players){
+    public void initPlayers(List<Player> players){
 
-        // init the blue team sprites
+        for(Player player : players){
 
-        //Sprite bluesStack = gem.createSprite().setImage("blue_stack.png"); //p.getAvatarToken()
-        Sprite bluesStack = gem.createSprite().setImage(players.get(0).getAvatarToken()); //p.getAvatarToken()
+            int[] playerCoords = getPlayerCoords(player.getIndex());
+    
+            initPlayer(player, playerCoords[0], playerCoords[1]);
+        }
 
-        int[] bluePlayerCoords = getPlayerCoords(0);
-
-        bluesStack.setX(bluePlayerCoords[0] - STACK_SIZE / 2);
-        bluesStack.setY(bluePlayerCoords[1] - STACK_SIZE / 2);
-
-        bluesStack.setBaseWidth(STACK_SIZE);
-        bluesStack.setBaseHeight(STACK_SIZE);
-
-        /* Sprite blueScore_Empty = gem.createSprite();
-        Sprite blueScore = gem.createSprite().setImage("scorebar.png");
-        
-        blueScore_Empty
-            .setImage("scorebar_empty.png")
-            .setBaseHeight(STACK_SIZE)
-            .setBaseWidth(SCORE_WIDTH)
-            .setX(bluePlayerCoords[0] + STACK_SIZE/2 + 20 - SCORE_WIDTH / 2)
-            .setY(bluePlayerCoords[1] - STACK_SIZE / 2);
-
-        blueScore
-            .setImage("scorebar.png")
-            .setBaseHeight(STACK_SIZE - 10)
-            .setBaseWidth(SCORE_WIDTH - 10)
-            .setX(bluePlayerCoords[0] + STACK_SIZE/2 + 20 - SCORE_WIDTH / 2 + 5)
-            .setY(bluePlayerCoords[1] - STACK_SIZE / 2 + 5); */
-
-        // init the yellow team sprites
-
-        //Sprite yellowStack = gem.createSprite().setImage("yellow_stack.png");
-        Sprite yellowStack = gem.createSprite().setImage(players.get(1).getAvatarToken());
-
-        int[] yellowPlayerCoords = getPlayerCoords(1);
-
-        yellowStack.setX(yellowPlayerCoords[0] - STACK_SIZE / 2);
-        yellowStack.setY(yellowPlayerCoords[1] - STACK_SIZE / 2);
-
-        yellowStack.setBaseWidth(STACK_SIZE);
-        yellowStack.setBaseHeight(STACK_SIZE); 
-        
         // init the common draw sprites
         
         Sprite drawStack = gem.createSprite().setImage("draw_stack.png");
 
-        drawStack.setX((screenWidth / 2) - STACK_SIZE / 2);
-        drawStack.setY(yellowPlayerCoords[1] - STACK_SIZE / 2);
+        drawStack.setX((screenWidth / 2) - PLAYER_SIZE / 2);
+        drawStack.setY(getPlayerCoords(0)[1] - PLAYER_SIZE / 2);
 
-        drawStack.setBaseWidth(STACK_SIZE);
-        drawStack.setBaseHeight(STACK_SIZE);        
+        drawStack.setBaseWidth(PLAYER_SIZE);
+        drawStack.setBaseHeight(PLAYER_SIZE);
 
+    }
+
+    public void initPlayer(Player player, int xCoord, int yCoord){
+
+        // init the player BackGround
+
+        int offset = 10;
+
+        gem.createRectangle()
+            .setX(xCoord - PLAYER_SIZE / 2 - offset / 2)
+            .setY(yCoord - PLAYER_SIZE / 2 - offset / 2)
+            .setHeight(PLAYER_SIZE + offset)
+            .setWidth(PLAYER_SIZE + offset)
+            .setFillColor(BACK_COLOR);
+        
+        // init the player
+
+        Sprite playerSprite = gem.createSprite().setImage(player.getAvatarToken()); //p.getAvatarToken()
+
+        playerSprite.setX(xCoord - PLAYER_SIZE / 2);
+        playerSprite.setY(yCoord - PLAYER_SIZE / 2);
+
+        playerSprite.setBaseWidth(PLAYER_SIZE);
+        playerSprite.setBaseHeight(PLAYER_SIZE);
     }
 
     // PLAYS VIEWER
@@ -462,15 +450,12 @@ public class View {
 
     public int[] getPlayerCoords(int playerIndex){
 
-        int playerY = (screenHeight + (GRID_ROWS - DRAW_HEIGHT) * GRID_SIZE) / 2;
+        int spaceBetweenPlayers = (screenWidth - 2 * PLAYER_OFFSET_X) / (this.playersCount - 1);
 
-        if(playerIndex == 0){
-            return new int[]{GRID_SIZE,  playerY};
-        }
-        else if(playerIndex == 1){
-            return new int[]{(GRID_COLUMNS * GRID_SIZE - GRID_SIZE * 2), playerY};
-        }
-        return null;
+        int playerX = PLAYER_OFFSET_X + playerIndex * spaceBetweenPlayers;
+        int playerY = screenHeight - PLAYER_OFFSET_Y - PLAYER_SIZE / 2;
+
+        return new int[] {playerX, playerY};
     }
 
 }
