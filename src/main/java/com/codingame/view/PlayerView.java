@@ -32,7 +32,8 @@ public class PlayerView {
             .setY(yCoord - backGroundSize / 2 - backGroundOffset / 2)
             .setHeight(backGroundSize + backGroundOffset)
             .setWidth(backGroundSize + backGroundOffset)
-            .setFillColor(View.BACK_COLOR);
+            .setFillColor(View.BACK_COLOR)
+            .setZIndex(View.Z_PLAYER);
 
         // init the player avatar sprite
 
@@ -43,6 +44,7 @@ public class PlayerView {
 
         playerSprite.setBaseWidth(View.AVATAR_SIZE);
         playerSprite.setBaseHeight(View.AVATAR_SIZE);
+        playerSprite.setZIndex(View.Z_PLAYER);
 
         // init the player name
 
@@ -54,7 +56,8 @@ public class PlayerView {
         .setText(player.getNicknameToken())
         .setMaxWidth(width - View.AVATAR_SIZE - textOffsetX * 2)
         .setX(xCoord + View.AVATAR_SIZE / 2 + textOffsetX)
-        .setY(yCoord - View.AVATAR_SIZE / 2);
+        .setY(yCoord - View.AVATAR_SIZE / 2)
+        .setZIndex(View.Z_PLAYER);
 
         // init the player score message
 
@@ -64,7 +67,8 @@ public class PlayerView {
             .setText(player.cardsCount() + " cards")
             .setMaxWidth(width - View.AVATAR_SIZE - textOffsetX * 2)
             .setX(xCoord + View.AVATAR_SIZE / 2 + textOffsetX)
-            .setY(yCoord);
+            .setY(yCoord)
+            .setZIndex(View.Z_PLAYER);
 
         // init the score bar
 
@@ -78,7 +82,8 @@ public class PlayerView {
         .setHeight(scoreBarHeight)
         .setX(xCoord - View.AVATAR_SIZE / 2)
         .setY(yCoord + View.AVATAR_SIZE / 2 + 10)
-        .setFillColor(SCORE_COLOR);
+        .setFillColor(SCORE_COLOR)
+        .setZIndex(View.Z_PLAYER);
 
         //this.setScore(player.cardsCount());
         this.setScore(14);

@@ -23,6 +23,7 @@ public class CardView {
         int[] spriteCoords = this.getCardCoords(row, col);
         
         this.sprite = gem.createSprite()
+            .setZIndex(View.Z_CARD)
             .setImage(this.card.getImage())
             .setBaseHeight(View.CARD_SIZE)
             .setBaseWidth(View.CARD_SIZE)
@@ -36,6 +37,10 @@ public class CardView {
 
     public static CardView getBlank(){
         return new CardView();
+    }
+
+    public void setZIndex(int index){
+        this.sprite.setZIndex(index);
     }
 
     public void setPosition(int row, int col) {

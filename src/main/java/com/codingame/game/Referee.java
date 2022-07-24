@@ -16,14 +16,11 @@ import com.codingame.gameengine.module.endscreen.EndScreenModule;
 import com.codingame.view.View;
 import com.google.inject.Inject;
 
-import view.modules.DisplayOnHoverModule;
-
 public class Referee extends AbstractReferee {
 
     @Inject private GameSummaryManager gameSummaryManager;
     @Inject private MultiplayerGameManager<Player> gameManager;
     @Inject private EndScreenModule endScreenModule;
-    @Inject private DisplayOnHoverModule displayOnHoverModule;    
     @Inject private Game game;
     @Inject private InputChecker checker;
     @Inject private View view;
@@ -107,7 +104,6 @@ public class Referee extends AbstractReferee {
                 gameSummaryManager.clear();   
 
                 view.update(player);
-                view.refreshPlayersTooltips(game); // TODO: ajouter les tooltips
             }
 
             gameOverFrame = game.isGameOver();

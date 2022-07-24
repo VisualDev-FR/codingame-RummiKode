@@ -16,18 +16,28 @@ import com.codingame.game.action.TakeAction;
 import com.codingame.game.card.*;
 import com.codingame.game.stack.StackSequence;
 import com.codingame.gameengine.module.entities.*;
+import com.codingame.gameengine.module.tooltip.TooltipModule;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+
+import view.modules.DisplayOnHoverModule;
+
 
 @Singleton
 public class View {
     
+    @Inject private DisplayOnHoverModule displayOnHoverModule;
+    @Inject private TooltipModule tooltipModule;    
     @Inject private GraphicEntityModule gem;
 
     private int screenWidth;
     private int screenHeight;
     private int playersCount;
     private int playerWidth;
+
+    final static int Z_BACK = 1;
+    final static int Z_CARD = 2;
+    final static int Z_PLAYER = 3;
 
     final static int BACK_COLOR = 0x3b3d40;    
     final static int DRAW_COLOR = 0x787b80;
@@ -67,7 +77,7 @@ public class View {
         this.draws = new HashMap<Integer, StackView>();
          
         this.playerViews = new HashMap<Integer, PlayerView>();
-        this.playersCount = game.getPlayers().size();       
+        this.playersCount = game.getPlayers().size();
 
         initBackGround();
         //DisplayGrid();
@@ -99,6 +109,8 @@ public class View {
         else if (player.getAction().isJoin()) {
             this.joinStack((JoinAction) player.getAction());
         }
+
+        updateStacksToolTips();
     }
 
     private void updateScoreBar(Player player){
@@ -112,6 +124,7 @@ public class View {
         // Background
 
         gem.createRectangle()
+        .setZIndex(Z_BACK)
         .setHeight(screenHeight)
         .setWidth(screenWidth)
         .setFillColor(BACK_COLOR);
@@ -119,7 +132,7 @@ public class View {
 
     public void initSprites(Game game, List<Player> players){
 
-        draws.put(-1, new StackView());
+        draws.put(-1, new StackView(gem, -1, null));
 
         for(Card card : game.getDrawCards()){
 
@@ -139,7 +152,7 @@ public class View {
 
         for(Player player : players){
 
-            draws.put(player.getIndex(), new StackView());
+            draws.put(player.getIndex(), new StackView(gem, player.getIndex(), null));
 
             for(String strCard : player.getCardCodes()){
 
@@ -183,12 +196,12 @@ public class View {
 
         CardView cardView = this.draws.get(-1).getCardView(card);
 
-        cardView.hide();
+        cardView.show();
+
+        removeSpriteFromDraw(cardView.getSpriteCode(), -1);
 
         this.drawMap.put(cardView.getSpriteCode(), player.getIndex());
-        this.draws.get(player.getIndex()).addCardView(cardView);
-        
-        removeSpriteFromDraw(cardView.getSpriteCode(), -1);
+        this.draws.get(player.getIndex()).addCardView(cardView);        
 
         board.update(this);
     }
@@ -202,7 +215,7 @@ public class View {
 
         int drawIndex = player.getIndex();
 
-        this.stacks.put(stackID, new StackView());
+        this.stacks.put(stackID, new StackView(gem, pushAction.getStackID(), pushAction.getType()));
 
         for (int i = 0; i < cards.size(); i++){
             
@@ -210,11 +223,12 @@ public class View {
 
             this.stackMap.put(cardView.getSpriteCode(), stackID);
 
-            StackView stackView = this.stacks.get(stackID);
+            StackView stackView = this.stacks.get(stackID);            
             
+            removeSpriteFromDraw(cardView.getSpriteCode(), drawIndex);
+
             stackView.addCardView(cardView);
 
-            removeSpriteFromDraw(cardView.getSpriteCode(), drawIndex);
         }
 
         board.update(this);
@@ -231,12 +245,11 @@ public class View {
         CardView cardView = this.draws.get(drawIndex).getCardView(cardToAdd);
         StackView stackView = this.stacks.get(stackID);
 
-        this.stackMap.put(cardView.getSpriteCode(), stackID);
+        this.stackMap.put(cardView.getSpriteCode(), stackID);        
+
+        removeSpriteFromDraw(cardView.getSpriteCode(), drawIndex);
 
         stackView.addCardView(cardView);
-
-        System.err.println(stackView.toString());
-        removeSpriteFromDraw(cardView.getSpriteCode(), drawIndex);
 
         board.update(this);
     }
@@ -249,7 +262,7 @@ public class View {
         StackSequence stack1 = splitAction.getStack1();
         StackSequence stack2 = splitAction.getStack2();
 
-        this.stacks.put(newStackId, new StackView());
+        this.stacks.put(newStackId, new StackView(gem, stack2.getID(), stack2.getType()));
 
         for(CardView cardView : new ArrayList<CardView>(this.stacks.get(stackID).getCardViews().values())){
 
@@ -257,15 +270,15 @@ public class View {
 
             if(stack2.containsCard(cardView.getCard())){
 
+                removeSpriteFromStack(spriteCode, stackID);
+
                 this.stackMap.put(spriteCode, newStackId);
                 this.stacks.get(newStackId).addCardView(cardView);
-                
-                removeSpriteFromStack(spriteCode, stackID);
             }
 
-            if(!stack1.containsCard(cardView.getCard())){
+            /* if(!stack1.containsCard(cardView.getCard())){
                 removeSpriteFromStack(spriteCode, stackID);
-            }
+            } */
         }
 
         System.err.println(stack1.toString());
@@ -330,14 +343,14 @@ public class View {
 
         String spriteCode = cardViewToTake.getSpriteCode();
 
-        this.drawMap.put(spriteCode, drawIndex);
-        this.draws.get(drawIndex).addCardView(cardViewToTake);
-
-        removeSpriteFromStack(spriteCode, stackID);        
-
         if(takeAction.doesMakeNewStack()){
             splitStack(takeAction.getSplitAction());
         }
+
+        removeSpriteFromStack(spriteCode, stackID);        
+
+        this.drawMap.put(spriteCode, drawIndex);
+        this.draws.get(drawIndex).addCardView(cardViewToTake);        
 
         board.update(this);
     }
@@ -370,6 +383,7 @@ public class View {
     }
 
     public void removeSpriteFromStack(String spriteCode, int stackID){
+        System.err.printf("spriteCode = %s, stackId = %s\n", spriteCode, stackID);
         stackMap.remove(spriteCode);
         stacks.get(stackID).removeCardView(spriteCode);
     }
@@ -384,9 +398,12 @@ public class View {
     
     // DISPLAY ON-HOVER HANDLING
 
-    public void refreshPlayersTooltips(Game game){
-        
-    }    
+    private void updateStacksToolTips(){
+
+        for(StackView stackView : this.stacks.values()){
+            stackView.refreshTooltip(tooltipModule);
+        }
+    }
 
     // GRID HANDLING
 

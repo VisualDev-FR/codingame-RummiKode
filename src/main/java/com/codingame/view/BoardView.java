@@ -5,11 +5,11 @@ public class BoardView {
     private int rows;
     private int columns;
 
-    private CardView board[][];
+    private boolean board[][];
 
     public BoardView(int row, int col){
 
-        this.board = new CardView[row][col];
+        this.board = new boolean[row][col];
         this.rows = row;
         this.columns = col;
     }
@@ -39,7 +39,7 @@ public class BoardView {
 
         int stackCount = 0;
 
-        this.board = new CardView[this.rows][this.columns];
+        this.board = new boolean[this.rows][this.columns];
 
         for(StackView stack : view.getStacks().values()){
 
@@ -49,7 +49,7 @@ public class BoardView {
             stack.setPosition(freePosition[0], freePosition[1]);
 
             this.setOccupied(stack);
-            this.setBlank(lastStackCard.getRow(), lastStackCard.getCol() + 1);
+            this.setOccupied(lastStackCard.getRow(), lastStackCard.getCol() + 1);
 
             stackCount++;
         }        
@@ -66,7 +66,7 @@ public class BoardView {
 
             for (int col = 0; col < board[0].length; col++) { 
 
-                if(board[row][col] == null){
+                if(board[row][col] == false){
                     nullCount++;
                 }else{
                     nullCount = 0;
@@ -88,16 +88,11 @@ public class BoardView {
     private void setOccupied(StackView stackView){
 
         for(CardView cardView : stackView.getCardViews().values()){
-            setOccupied(cardView.getRow(), cardView.getCol(), cardView);
+            setOccupied(cardView.getRow(), cardView.getCol());
         }
     }
 
-    private void setOccupied(int row, int col, CardView cardView){
-        board[row][col] = cardView;
-    }    
-    
-    private void setBlank(int row, int col){
-        this.board[row][col] = CardView.getBlank();
-    }
-        
+    private void setOccupied(int row, int col){
+        board[row][col] = true;
+    }        
 }
