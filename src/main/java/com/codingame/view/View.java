@@ -175,7 +175,6 @@ public class View {
                 displayHoverCard.hide();
                 displayHoverCards.put(cardView.getSpriteCode(), displayHoverCard);
                 
-                cardView.hide();
                 cardView.setCoords(playerCoords[0] - CARD_SIZE / 2, playerCoords[1]  - CARD_SIZE / 2);
 
                 drawMap.put(cardView.getSpriteCode(), player.getIndex());
