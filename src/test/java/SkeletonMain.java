@@ -27,8 +27,8 @@ public class SkeletonMain {
 
         MultiplayerGameRunner gameRunner = new MultiplayerGameRunner();
 
-        gameRunner.addAgent(Boss2.class);
-        gameRunner.addAgent(Boss2.class);
+        gameRunner.addAgent(BasicIA.class, "BasicIA");
+        gameRunner.addAgent(Waiter.class, "Waiter");
         //gameRunner.addAgent(Boss2.class);
         //gameRunner.addAgent(Boss2.class);
 

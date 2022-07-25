@@ -1,6 +1,6 @@
 import java.util.*;
 
-class Boss2 {
+class BasicIA {
 
     public static int actionsLeft;
     public static int playerScore;

@@ -54,7 +54,7 @@ public class View {
     final static int PLAYER_OFFSET = 20;
 
     final static int BOARD_ROWS = 11;
-    final static int BOARD_COLUMNS = 26;
+    final static int BOARD_COLUMNS = 25;
 
     private BoardView board;
 

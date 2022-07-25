@@ -129,15 +129,20 @@ public class PlayerView {
         return this.player;
     }
 
+    private int roundUp(double val){
+        int res = (int) Math.ceil(val);
+        return res;
+    }
+
     public void refreshDisplayHover(GraphicEntityModule gem, DisplayOnHoverModule displayOnHoverModule, Collection<CardView> cardViews){
 
         // refresh the draw background size
 
         int backWidth = gem.getWorld().getWidth();
-        int backHeight = (int) (View.GRID_SIZE * Math.max(1, (Math.ceil(cardViews.size() / View.GRID_COLUMNS))) + 20);
+        int backHeight = View.GRID_SIZE * Math.max(1, roundUp((double) cardViews.size() / View.BOARD_COLUMNS)) + 20;
+        int displayY = View.GRID_SIZE * (View.BOARD_ROWS + 1) - backHeight - 10;
 
-        this.drawGroup.setY(View.GRID_SIZE * (View.BOARD_ROWS + 1) - backHeight - 10);
-
+        this.drawGroup.setY(displayY);
         this.drawBackGround
             .setWidth(backWidth)
             .setHeight(backHeight);
@@ -149,18 +154,18 @@ public class PlayerView {
         int cardIndex = 0;
         for (CardView cardView : cardViews) {
 
-            int row = (int) Math.ceil(cardIndex / View.GRID_COLUMNS);
-            int col = cardIndex % (View.GRID_COLUMNS + 1);
+            int row = (int) Math.ceil(cardIndex / View.BOARD_COLUMNS);
+            int col = cardIndex % (View.BOARD_COLUMNS);
 
             this.drawGroup.add(cardView.getSprite());
             this.cardViews.add(cardView);
 
-            cardView.setZIndex(View.Z_CARD); 
-            cardView.show();           
+            cardView.setZIndex(View.Z_CARD);     
             cardView.getSprite()
             .setX(col * View.GRID_SIZE + View.GRID_SIZE / 2 - View.CARD_SIZE / 2 + 10)
-            .setY(row * View.GRID_SIZE + View.GRID_SIZE / 2 - View.CARD_SIZE / 2 + 10); 
-            
+            .setY(row * View.GRID_SIZE + View.GRID_SIZE / 2 - View.CARD_SIZE / 2 + 10);
+            cardView.show();
+
             cardIndex++;
         }
         
