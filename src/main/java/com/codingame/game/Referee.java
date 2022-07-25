@@ -89,23 +89,24 @@ public class Referee extends AbstractReferee {
     
             if (player.isActive()) {
 
-                /* System.err.println("isAdd = " + player.getAction().isAdd());
+                /*                 
+                System.err.println("isAdd = " + player.getAction().isAdd());
                 System.err.println("isJoin = " + player.getAction().isJoin());
                 System.err.println("isMove = " + player.getAction().isMove());
                 System.err.println("isPush = " + player.getAction().isPush());
                 System.err.println("isSplit = " + player.getAction().isSplit());
                 System.err.println("isTake = " + player.getAction().isTake());
-                System.err.println("isWait = " + player.getAction().isWait()); */
+                System.err.println("isWait = " + player.getAction().isWait());
+                */
 
                 game.performGameUpdate(player);
 
+                view.update(player);
+
                 setNextPhase(player);
                 gameManager.addToGameSummary(gameSummaryManager.getSummary());
-                gameSummaryManager.clear();   
-
-                view.update(player);
-            }
-
+                gameSummaryManager.clear();
+            }            
             gameOverFrame = game.isGameOver();
 
         }else{
@@ -115,6 +116,92 @@ public class Referee extends AbstractReferee {
             gameManager.endGame();
         }       
     }
+
+    @Override
+    public void onEnd() {
+
+        List<Player> players = gameManager.getPlayers();
+    
+        int[] scores = new int[players.size()];
+        String[] scoreDescription = new String[players.size()];
+
+        TreeMap<Integer, TreeMap<Integer, List<Integer>>> scoreMap = new TreeMap<Integer, TreeMap<Integer,  List<Integer>>>();
+
+        for(Player player : players){
+
+            int playerIndex = player.getIndex();
+            int cardCount = player.cardsCount();
+            int playsCount = player.getPlays();            
+
+            scoreMap.putIfAbsent(cardCount, new TreeMap<Integer,  List<Integer>>());
+            scoreMap.get(cardCount).putIfAbsent(playsCount, new ArrayList<Integer>());
+
+            scoreMap.get(cardCount).get(playsCount).add(playerIndex);
+        }   
+
+        for(int card : scoreMap.keySet()){
+
+            System.err.println("Card count = " + card);
+
+            for(int play : scoreMap.get(card).keySet()){
+
+                System.err.println("  Plays count = " + play);
+
+                for(int index : scoreMap.get(card).get(play)){
+
+                    System.err.println("    PLAYER INDEX = " + index);
+                }
+            }
+        }
+
+        int maxScore = 4;
+
+        for(int cardCount : scoreMap.keySet()){
+
+            for(int playsCount : scoreMap.get(cardCount).keySet()){
+
+                List<Integer> playerList = scoreMap.get(cardCount).get(playsCount);
+
+                if(playerList.size() > 1){ // more than 1 player have the same card count, and the same plays count -> it's a tie
+
+                    for(int playerIndex : playerList){
+
+                        if(players.get(playerIndex).isActive()){
+                            scores[playerIndex] = maxScore;
+                            scoreDescription[playerIndex] = String.format("%s cards left, %s plays", cardCount, playsCount);
+                            // we dont decrease the score here, in order to give the same score to all playerList, we will decrease it at the end of the loop
+                        }
+                        else{
+                            scores[playerIndex] = -1;
+                            scoreDescription[playerIndex] = "Disqualified";
+                        }
+                    }
+                    maxScore--;
+
+                }else{  // there is only one player with this cards count and this plays count -> next ranking
+
+                    int playerIndex = playerList.get(0);
+
+                    if(players.get(playerIndex).isActive()){
+                        scores[playerIndex] = maxScore;
+                        scoreDescription[playerIndex] = scoreMap.get(cardCount).size() > 1 ?
+                            String.format("%s cards left, %s plays", cardCount, playsCount) :
+                            String.format("%s cards left", cardCount);
+                        
+                        maxScore--;
+                    }
+                    else{
+                        scores[playerIndex] = -1;
+                        scoreDescription[playerIndex] = "Disqualified";
+                    }
+                }
+            }
+        }
+
+        endScreenModule.setScores(scores, scoreDescription);
+    }
+
+    // MISC
 
     public void deactivatePlayer(Player player, String message) {
         //player.deactivate();
@@ -490,87 +577,4 @@ public class Referee extends AbstractReferee {
         }
     }
 
-    @Override
-    public void onEnd() {
-
-        List<Player> players = gameManager.getPlayers();
-    
-        int[] scores = new int[players.size()];
-        String[] scoreDescription = new String[players.size()];
-
-        TreeMap<Integer, TreeMap<Integer, List<Integer>>> scoreMap = new TreeMap<Integer, TreeMap<Integer,  List<Integer>>>();
-
-        for(Player player : players){
-
-            int playerIndex = player.getIndex();
-            int cardCount = player.cardsCount();
-            int playsCount = player.getPlays();            
-
-            scoreMap.putIfAbsent(cardCount, new TreeMap<Integer,  List<Integer>>());
-            scoreMap.get(cardCount).putIfAbsent(playsCount, new ArrayList<Integer>());
-
-            scoreMap.get(cardCount).get(playsCount).add(playerIndex);
-        }   
-
-        for(int card : scoreMap.keySet()){
-
-            System.err.println("Card count = " + card);
-
-            for(int play : scoreMap.get(card).keySet()){
-
-                System.err.println("  Plays count = " + play);
-
-                for(int index : scoreMap.get(card).get(play)){
-
-                    System.err.println("    PLAYER INDEX = " + index);
-                }
-            }
-        }
-
-        int maxScore = 4;
-
-        for(int cardCount : scoreMap.keySet()){
-
-            for(int playsCount : scoreMap.get(cardCount).keySet()){
-
-                List<Integer> playerList = scoreMap.get(cardCount).get(playsCount);
-
-                if(playerList.size() > 1){ // more than 1 player have the same card count, and the same plays count -> it's a tie
-
-                    for(int playerIndex : playerList){
-
-                        if(players.get(playerIndex).isActive()){
-                            scores[playerIndex] = maxScore;
-                            scoreDescription[playerIndex] = String.format("%s cards left, %s plays", cardCount, playsCount);
-                            // we dont decrease the score here, in order to give the same score to all playerList, we will decrease it at the end of the loop
-                        }
-                        else{
-                            scores[playerIndex] = -1;
-                            scoreDescription[playerIndex] = "Disqualified";
-                        }
-                    }
-                    maxScore--;
-
-                }else{  // there is only one player with this cards count and this plays count -> next ranking
-
-                    int playerIndex = playerList.get(0);
-
-                    if(players.get(playerIndex).isActive()){
-                        scores[playerIndex] = maxScore;
-                        scoreDescription[playerIndex] = scoreMap.get(cardCount).size() > 1 ?
-                            String.format("%s cards left, %s plays", cardCount, playsCount) :
-                            String.format("%s cards left", cardCount);
-                        
-                        maxScore--;
-                    }
-                    else{
-                        scores[playerIndex] = -1;
-                        scoreDescription[playerIndex] = "Disqualified";
-                    }
-                }
-            }
-        }
-
-        endScreenModule.setScores(scores, scoreDescription);
-    }
 }

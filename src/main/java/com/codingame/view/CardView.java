@@ -31,14 +31,6 @@ public class CardView {
             .setY(spriteCoords[1]);
     }
 
-    private CardView(){
-        // For filling board with blank cardViews
-    }
-
-    public static CardView getBlank(){
-        return new CardView();
-    }
-
     public void setZIndex(int index){
         this.sprite.setZIndex(index);
     }

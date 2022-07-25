@@ -7,21 +7,23 @@ import java.util.TreeMap;
 import com.codingame.game.card.Card;
 import com.codingame.game.stack.StackType;
 import com.codingame.gameengine.module.entities.GraphicEntityModule;
-import com.codingame.gameengine.module.entities.Group;
 import com.codingame.gameengine.module.tooltip.TooltipModule;
+
 
 public class StackView {
 
     private TreeMap<String, CardView> cardViews;
-    private Group cardsGroup;
     private int stackID;
     private StackType type;
 
     public StackView(GraphicEntityModule gem, int stackID, StackType type) {
-        this.cardViews = new TreeMap<String, CardView>();
-        this.cardsGroup = gem.createGroup().setZIndex(View.Z_CARD);
+        this.cardViews = new TreeMap<String, CardView>();        
         this.stackID = stackID;
         this.type = type;
+    }
+
+    public int getID(){
+        return this.stackID;
     }
 
     public CardView getCardView(String spriteCode){
@@ -41,18 +43,15 @@ public class StackView {
         return null;
     }
 
-    public void addCardView(CardView cardView){        
-        this.cardsGroup.add(cardView.getSprite());
+    public void addCardView(CardView cardView){
         this.cardViews.put(cardView.getSpriteCode(), cardView);
     }
 
-    public void removeCardView(CardView cardView){        
-        this.cardsGroup.remove(cardView.getSprite());
+    public void removeCardView(CardView cardView){
         this.cardViews.remove(cardView.getSpriteCode());
     }
 
-    public void removeCardView(String spriteCode){        
-        this.cardsGroup.remove(this.cardViews.get(spriteCode).getSprite());
+    public void removeCardView(String spriteCode){
         this.cardViews.remove(spriteCode);
     }
 
@@ -65,18 +64,16 @@ public class StackView {
     }
 
     public void refreshTooltip(TooltipModule tooltipModule){
-        String text = String.format("Stack ID : %s\nStack type : %s\nCards count : %s", this.stackID, this.type.toString(), this.size());
-        tooltipModule.setTooltipText(this.cardsGroup, text);
+        for(CardView cardView : this.cardViews.values()){
+            String text = String.format("Card : %s\nStack ID : %s\nStack type : %s\nCards count : %s", cardView.getCard().getHashCode(), this.stackID, this.type.toString(), this.size());
+            tooltipModule.setTooltipText(cardView.getSprite(), text);
+        }        
     }
 
     public int size(){
         return this.cardViews.size();
     }
 
-    public Group getGroup(){
-        return this.cardsGroup;
-    }
-    
     public void setPosition(int startRow, int startCol){
 
         List<CardView> cards = new ArrayList<>(this.cardViews.values());

@@ -1,6 +1,7 @@
 package com.codingame.view;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,13 +23,12 @@ import com.google.inject.Singleton;
 
 import view.modules.DisplayOnHoverModule;
 
-
 @Singleton
 public class View {
     
-    @Inject private DisplayOnHoverModule displayOnHoverModule;
-    @Inject private TooltipModule tooltipModule;    
+    @Inject private DisplayOnHoverModule displayOnHoverModule;    
     @Inject private GraphicEntityModule gem;
+    @Inject private TooltipModule tooltipModule;
 
     private int screenWidth;
     private int screenHeight;
@@ -63,6 +63,7 @@ public class View {
     private Map<Integer, StackView> stacks;
     private Map<Integer, StackView> draws;
     private Map<Integer, PlayerView> playerViews;
+    private Map<String, CardView> displayHoverCards;
 
     public void init(Game game){
 
@@ -75,6 +76,7 @@ public class View {
         this.drawMap = new HashMap<String, Integer>();
         this.stacks = new HashMap<Integer, StackView>();
         this.draws = new HashMap<Integer, StackView>();
+        this.displayHoverCards = new HashMap<String, CardView>();
          
         this.playerViews = new HashMap<Integer, PlayerView>();
         this.playersCount = game.getPlayers().size();
@@ -83,8 +85,9 @@ public class View {
         //DisplayGrid();
         initSprites(game, game.getPlayers());
         initPlayers(game.getPlayers());
+        updateDrawsDisplayHover();
 
-        // ! \\ CODE AFTER THIS LINES
+        // ! \\ CODE AFTER THIS LINES       
     }
 
     public void update(Player player){
@@ -111,6 +114,7 @@ public class View {
         }
 
         updateStacksToolTips();
+        updateDrawsDisplayHover();
     }
 
     private void updateScoreBar(Player player){
@@ -142,6 +146,10 @@ public class View {
             int spriteY = getPlayerCoords(0)[1] - CARD_SIZE / 2;   
 
             CardView cardView = new CardView(gem, card, spriteIndex);
+            CardView displayHoverCard = new CardView(gem, card, spriteIndex);
+            
+            displayHoverCard.hide();
+            displayHoverCards.put(cardView.getSpriteCode(), displayHoverCard);
 
             cardView.hide();
             cardView.setCoords(spriteX, spriteY);
@@ -162,6 +170,10 @@ public class View {
                 int[] playerCoords = getPlayerCoords(player.getIndex());
 
                 CardView cardView = new CardView(gem, card, spriteIndex);
+                CardView displayHoverCard = new CardView(gem, card, spriteIndex);
+            
+                displayHoverCard.hide();
+                displayHoverCards.put(cardView.getSpriteCode(), displayHoverCard);
                 
                 cardView.hide();
                 cardView.setCoords(playerCoords[0] - CARD_SIZE / 2, playerCoords[1]  - CARD_SIZE / 2);
@@ -181,7 +193,7 @@ public class View {
             int[] playerCoords = getPlayerCoords(player.getIndex());
 
             PlayerView playerView = new PlayerView(gem, player, players.size(), playerCoords[0], playerCoords[1], this.playerWidth, PLAYER_HEIGHT);
-            
+
             playerViews.put(player.getIndex(), playerView);
         }
     }
@@ -228,7 +240,6 @@ public class View {
             removeSpriteFromDraw(cardView.getSpriteCode(), drawIndex);
 
             stackView.addCardView(cardView);
-
         }
 
         board.update(this);
@@ -399,10 +410,32 @@ public class View {
     // DISPLAY ON-HOVER HANDLING
 
     private void updateStacksToolTips(){
-
         for(StackView stackView : this.stacks.values()){
             stackView.refreshTooltip(tooltipModule);
         }
+    }
+
+    private void updateDrawsDisplayHover(){
+
+        for(PlayerView playerView : this.playerViews.values()){
+
+            StackView drawView = this.draws.get(playerView.getPlayer().getIndex());
+
+            List<CardView> displayHoverCards = getDisplayHoverCards(drawView.getCardViews().values());
+
+            playerView.refreshDisplayHover(gem, displayOnHoverModule, displayHoverCards);
+        }
+    }
+
+    private List<CardView> getDisplayHoverCards(Collection<CardView> cardViews){
+
+        List<CardView> displayHoverCards = new ArrayList<CardView>();
+
+        for(CardView cardView : cardViews){
+            displayHoverCards.add(this.displayHoverCards.get(cardView.getSpriteCode()));
+        }
+
+        return displayHoverCards;
     }
 
     // GRID HANDLING
@@ -449,5 +482,16 @@ public class View {
 
         return new int[] {playerX, playerY};
     }
+
+    public void PrintTooltips(){
+
+        for(StackView stackView : this.stacks.values()){
+            for(CardView cardView : stackView.getCardViews().values()){
+                System.err.printf("%s\n\n", tooltipModule.getTooltipText(cardView.getSprite()));
+            }
+        }
+
+    }
+
 
 }

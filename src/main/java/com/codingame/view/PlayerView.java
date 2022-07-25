@@ -1,16 +1,28 @@
 package com.codingame.view;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import com.codingame.game.Player;
 import com.codingame.gameengine.module.entities.BitmapText;
 import com.codingame.gameengine.module.entities.GraphicEntityModule;
+import com.codingame.gameengine.module.entities.Group;
+import com.codingame.gameengine.module.entities.Rectangle;
 import com.codingame.gameengine.module.entities.RoundedRectangle;
 import com.codingame.gameengine.module.entities.Sprite;
+import view.modules.DisplayOnHoverModule;
 
 public class PlayerView {
 
     private GraphicEntityModule gem;
     private RoundedRectangle scoreBar;
     private BitmapText scoreMessage;
+    private Sprite playerSprite;
+    private Player player;
+    private Group drawGroup;
+    private Rectangle drawBackGround;    
+    private List<CardView> cardViews;
     
     private int width;
 
@@ -19,8 +31,22 @@ public class PlayerView {
 
     public PlayerView(GraphicEntityModule gem, Player player, int playersCount, int xCoord, int yCoord, int width, int height){
 
+        this.cardViews = new ArrayList<CardView>();
+        this.player = player;
         this.gem = gem;
         this.width = width;
+
+        // init the displayHover entity
+
+        this.drawBackGround = gem.createRectangle()
+            .setFillColor(0x000000)
+            .setAlpha(0.95);
+        
+        this.drawGroup = gem.createGroup();        
+        this.drawGroup
+            .setVisible(false)
+            .setZIndex(View.Z_CARD)
+            .add(drawBackGround);
         
         // init the player BackGround
 
@@ -37,14 +63,14 @@ public class PlayerView {
 
         // init the player avatar sprite
 
-        Sprite playerSprite = this.gem.createSprite().setImage(player.getAvatarToken()); //p.getAvatarToken()
+        this.playerSprite = this.gem.createSprite().setImage(player.getAvatarToken()); //p.getAvatarToken()
 
-        playerSprite.setX(xCoord - View.AVATAR_SIZE / 2);
-        playerSprite.setY(yCoord - View.AVATAR_SIZE / 2);
+        this.playerSprite.setX(xCoord - View.AVATAR_SIZE / 2);
+        this.playerSprite.setY(yCoord - View.AVATAR_SIZE / 2);
 
-        playerSprite.setBaseWidth(View.AVATAR_SIZE);
-        playerSprite.setBaseHeight(View.AVATAR_SIZE);
-        playerSprite.setZIndex(View.Z_PLAYER);
+        this.playerSprite.setBaseWidth(View.AVATAR_SIZE);
+        this.playerSprite.setBaseHeight(View.AVATAR_SIZE);
+        this.playerSprite.setZIndex(View.Z_PLAYER);
 
         // init the player name
 
@@ -89,10 +115,63 @@ public class PlayerView {
         this.setScore(14);
     }
 
+    public Sprite getSprite(){
+        return this.playerSprite;
+    }
+
     public void setScore(int score){
         int computeWidth = this.width * score / MAX_SCORE_DISPLAY;
         scoreBar.setWidth(Math.min(this.width, computeWidth));
         scoreMessage.setText(score + " cards");
     }
     
+    public Player getPlayer(){
+        return this.player;
+    }
+
+    public void refreshDisplayHover(GraphicEntityModule gem, DisplayOnHoverModule displayOnHoverModule, Collection<CardView> cardViews){
+
+        // refresh the draw background size
+
+        int backWidth = gem.getWorld().getWidth();
+        int backHeight = (int) (View.GRID_SIZE * Math.max(1, (Math.ceil(cardViews.size() / View.GRID_COLUMNS))) + 20);
+
+        this.drawGroup.setY(View.GRID_SIZE * (View.BOARD_ROWS + 1) - backHeight - 10);
+
+        this.drawBackGround
+            .setWidth(backWidth)
+            .setHeight(backHeight);
+
+        // refresh the card sprites        
+        
+        resetCardViews();
+
+        int cardIndex = 0;
+        for (CardView cardView : cardViews) {
+
+            int row = (int) Math.ceil(cardIndex / View.GRID_COLUMNS);
+            int col = cardIndex % (View.GRID_COLUMNS + 1);
+
+            this.drawGroup.add(cardView.getSprite());
+            this.cardViews.add(cardView);
+
+            cardView.setZIndex(View.Z_CARD); 
+            cardView.show();           
+            cardView.getSprite()
+            .setX(col * View.GRID_SIZE + View.GRID_SIZE / 2 - View.CARD_SIZE / 2 + 10)
+            .setY(row * View.GRID_SIZE + View.GRID_SIZE / 2 - View.CARD_SIZE / 2 + 10); 
+            
+            cardIndex++;
+        }
+        
+        displayOnHoverModule.setDisplayHover(this.playerSprite, this.drawGroup);
+    }
+
+    public void resetCardViews(){
+        for(CardView cardView : cardViews){
+            this.drawGroup.remove(cardView.getSprite());
+            cardView.hide();
+        }
+        cardViews = new ArrayList<CardView>();
+    }
 }
