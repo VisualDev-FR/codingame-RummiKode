@@ -29,10 +29,11 @@ public class SkeletonMain {
 
         gameRunner.addAgent(Boss2.class);
         gameRunner.addAgent(Boss2.class);
-        gameRunner.addAgent(Boss2.class);
-        gameRunner.addAgent(Boss2.class);
+        //gameRunner.addAgent(Boss2.class);
+        //gameRunner.addAgent(Boss2.class);
 
-        gameRunner.setSeed(4662452976557327007L); // 162 turns
+        //gameRunner.setSeed(4662452976557327007L); // 162 turns
+        gameRunner.setSeed(2762699414300471800L);
 
         gameRunner.start();
 
