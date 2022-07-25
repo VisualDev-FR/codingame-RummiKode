@@ -1,54 +1,13 @@
-This project is the skeleton for the creation of a game using the Game Engine Toolkit of [CodinGame](https://codingame.com).
+A codingame multiplayer game project inspired by the famous board game [Rummikub](https://en.wikipedia.org/wiki/Rummikub)
 
-Check the documentation on the [github repository](https://github.com/CodinGame/codingame-sdk-doc).
+You can try play online [here](https://www.codingame.com/contribute/view/25063d28cb5fb9c697257bc35536340919659), definitly the best way to play it.
 
-## Note about the game turn implementation
-There are 2 ways to implement your game turn according to the game you want to create. **The simultaneous mode** or the **Turn by Turn mode**.
+If you want to run it on your local machine,
+ - Download the latest release
+ - Unzip the archive
+ - run `src\test\java\SkeletonMain.java` with JDK 1.8 (or higher) and Maven installed. After it ran, open ` http://localhost:8888/test.html`  to watch the game.
 
-### The simultaneous mode
-It's a game mode where all players receive the game data and execute their actions in the same turn. (eg: Race, Pong, ...)
+For more information, check the [codingame doc](https://www.codingame.com/playgrounds/25775/codingame-sdk-documentation/game-runner)
 
-```java
-for (Player player : gameManager.getActivePlayers()) {
-    player.sendInputLine(input);
-    player.execute();
-}
-
-for (Player player : gameManager.getActivePlayers()) {
-    try {
-        List<String> outputs = player.getOutputs();
-        // Check validity of the player output and compute the new game state
-    } catch (TimeoutException e) {
-        player.deactivate(String.format("$%d timeout!", player.getIndex()));
-    }
-}
-
-// Check if there is a win / lose situation and call gameManager.endGame(); when game is finished
-```
-
-### The Turn by Turn mode:
-It's a game mode where only one player execute an action during a turn. (eg: TicTacToe, Chess)
-
-```java
-SkeletonPlayer player = gameManager.getPlayer(turn % playerCount);
-player.sendInputLine(input);
-player.execute();
-try {
-    List<String> outputs = player.getOutputs();
-    // Check validity of the player output and compute the new game state
-} catch (TimeoutException e) {
-    player.deactivate(String.format("$%d timeout!", player.getIndex()));
-    player.setScore(-1);
-    gameManager.endGame();
-}
-
-// Check if there is a win / lose situation and call gameManager.endGame(); when game is finished
-```
-
-## Loading assets
-Assets are expected to be placed in the `src/main/resources/view/assets` folder of your game's project.
-
-You can then use the images in the texture cache with the Entity Module:
-```java
-entityManager.createSprite.setImage("background.jpg");
-```
+![](src/main/resources/view/assets/logo.png)
+![](config/Preview.jpg)
