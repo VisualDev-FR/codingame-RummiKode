@@ -172,6 +172,12 @@ public class PlayerView {
         displayOnHoverModule.setDisplayHover(this.playerSprite, this.drawGroup);
     }
 
+    public void kill(DisplayOnHoverModule displayOnHoverModule){
+        scoreBar.setWidth(0);
+        scoreMessage.setText("Disqualified...");
+        displayOnHoverModule.untrack(this.playerSprite);
+    }
+
     public void resetCardViews(){
         for(CardView cardView : cardViews){
             this.drawGroup.remove(cardView.getSprite());

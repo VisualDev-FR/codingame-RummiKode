@@ -43,8 +43,8 @@ public class GameSummaryManager {
 
     // GAME SUMMARY
 
-    public void anyCardLeftInCommonDraw(Player player){
-        this.add("any cards left in the common draw, player %s doesn't draw", player.getNicknameToken());
+    public void addDrawEmpty(Player player){
+        this.add("%s should draw one card, but the common draw is empty.", player.getNicknameToken());
     }
 
     // PLAYING SUMMARY

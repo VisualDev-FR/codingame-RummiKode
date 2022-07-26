@@ -74,6 +74,11 @@ public class StackView {
         return this.cardViews.size();
     }
 
+    public void moveTo(StackView stackView){
+        stackView.cardViews.putAll(this.cardViews);
+        this.cardViews.clear();
+    }
+
     public void setPosition(int startRow, int startCol){
 
         List<CardView> cards = new ArrayList<>(this.cardViews.values());

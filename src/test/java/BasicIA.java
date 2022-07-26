@@ -2,6 +2,7 @@ import java.util.*;
 
 class BasicIA {
 
+    public static int playerIndex;
     public static int actionsLeft;
     public static int playerScore;
     public static boolean pushedFirstSequence;
@@ -25,6 +26,7 @@ class BasicIA {
             
             for (int i = 0; i < playersCount; i++) {
                 
+                playerIndex = in.nextInt();
                 playerScore = in.nextInt();     // the score of the player i (your playerIndex will always be 0)
                 actionsLeft = in.nextInt();     // the remaining actions of the player i
                 

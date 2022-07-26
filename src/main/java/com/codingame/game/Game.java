@@ -63,15 +63,22 @@ public class Game {
         List<String> lines = new ArrayList<>();
 
         lines.add(Integer.toString(player.getIndex())); // myPlayerIndex
-        lines.add(Integer.toString(gameManager.getPlayerCount())); // playersCount
+        lines.add(Integer.toString(gameManager.getActivePlayers().size())); // playersCount
         lines.add(Integer.toString(stacks.size())); // stacksCount
         lines.add(Integer.toString(drawCards.size())); // drawCardsCount 
+
+        for(Player activePlayer : gameManager.getActivePlayers()){
+            lines.add(Integer.toString(activePlayer.getIndex())); // playerIndex
+            lines.add(Integer.toString(activePlayer.cardsCount())); // nbCards
+            lines.add(Integer.toString(activePlayer.actionsLeft())); // actionsLeft
+            lines.add(activePlayer.getInfos()); // cards of the player
+        }
         
-        for(int i = 0; i < gameManager.getPlayerCount(); i++){
+        /* for(int i = 0; i < gameManager.getPlayerCount(); i++){
             lines.add(Integer.toString(gameManager.getPlayers().get(i).cardsCount())); // nbCards
             lines.add(Integer.toString(gameManager.getPlayers().get(i).actionsLeft())); // actionsLeft
             lines.add(gameManager.getPlayers().get(i).getInfos()); // cards of the player i        
-        }
+        } */
 
         for(int stackID : this.stacks.keySet()){
 
@@ -182,6 +189,17 @@ public class Game {
                 gameManager.addToGameSummary("No player remaining!");
             }
             return;
+        }
+    }
+
+    public void returnPlayerCards(Player player){
+         
+        for(String strCard : player.getCardCodes().toArray(new String[0])){
+
+            Card card = new Card(strCard);
+
+            player.removeCardInHand(card);
+            this.drawCards.add(card);
         }
     }
 

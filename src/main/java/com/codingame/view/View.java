@@ -92,29 +92,45 @@ public class View {
 
     public void update(Player player){
 
-        updateScoreBar(player);
+        if(player.isActive()){
 
-        if (player.getAction().isMove()) {
-            this.moveCard((MoveAction) player.getAction());
+            updateScoreBar(player);
+
+            if (player.getAction().isMove()) {
+                this.moveCard((MoveAction) player.getAction());
+            }
+            else if (player.getAction().isTake()) {
+                this.takeCard(player);
+            }
+            else if (player.getAction().isAdd()) {
+                this.addCard(player);
+            }
+            else if (player.getAction().isPush()) {
+                this.pushStack(player);
+            }
+            else if (player.getAction().isSplit()) {
+                this.splitStack((SplitAction) player.getAction());
+            }
+            else if (player.getAction().isJoin()) {
+                this.joinStack((JoinAction) player.getAction());
+            }
         }
-        else if (player.getAction().isTake()) {
-            this.takeCard(player);
-        }
-        else if (player.getAction().isAdd()) {
-            this.addCard(player);
-        }
-        else if (player.getAction().isPush()) {
-            this.pushStack(player);
-        }
-        else if (player.getAction().isSplit()) {
-            this.splitStack((SplitAction) player.getAction());
-        }
-        else if (player.getAction().isJoin()) {
-            this.joinStack((JoinAction) player.getAction());
-        }
+        else{
+
+            killPlayer(player);
+
+        }        
 
         updateStacksToolTips();
         updateDrawsDisplayHover();
+    }
+
+    private void killPlayer(Player player){
+        for(CardView cardView : this.draws.get(player.getIndex()).getCardViews().values()){
+            cardView.hide();
+        }
+        this.draws.get(player.getIndex()).moveTo(this.draws.get(-1));
+        playerViews.get(player.getIndex()).kill(displayOnHoverModule);
     }
 
     private void updateScoreBar(Player player){

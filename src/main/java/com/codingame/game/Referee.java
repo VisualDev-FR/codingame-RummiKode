@@ -68,13 +68,14 @@ public class Referee extends AbstractReferee {
 
         if (!gameOverFrame) {
 
-            Player player = gameManager.getPlayer(activePlayerId);
+            Player player = game.getPlayers().get(activePlayerId);
+
             for (String line : game.getCurrentFrameInfoFor(player)) {
                 player.sendInputLine(line);
             }
     
             player.execute();
-    
+
             try {
                 parseCommands(player, player.getOutputs(), game);
             } catch (TimeoutException e) {
@@ -87,26 +88,18 @@ public class Referee extends AbstractReferee {
                 gameSummaryManager.addPlayerDisqualified(player);
             } 
     
-            if (player.isActive()) {
-
-                /*                 
-                System.err.println("isAdd = " + player.getAction().isAdd());
-                System.err.println("isJoin = " + player.getAction().isJoin());
-                System.err.println("isMove = " + player.getAction().isMove());
-                System.err.println("isPush = " + player.getAction().isPush());
-                System.err.println("isSplit = " + player.getAction().isSplit());
-                System.err.println("isTake = " + player.getAction().isTake());
-                System.err.println("isWait = " + player.getAction().isWait());
-                */
-
+            if (player.isActive()) {                
                 game.performGameUpdate(player);
-
                 view.update(player);
+            }
+            else{
+                game.returnPlayerCards(player);
+                view.update(player);
+            }
 
-                setNextPhase(player);
-                gameManager.addToGameSummary(gameSummaryManager.getSummary());
-                gameSummaryManager.clear();
-            }            
+            setNextPhase(player);
+            gameManager.addToGameSummary(gameSummaryManager.getSummary());
+            gameSummaryManager.clear();            
             gameOverFrame = game.isGameOver();
 
         }else{
@@ -196,9 +189,7 @@ public class Referee extends AbstractReferee {
     // MISC
 
     public void deactivatePlayer(Player player, String message) {
-        //player.deactivate();
         player.deactivate(escapeHTMLEntities(message));
-        player.setScore(9999);
     }
 
     private String escapeHTMLEntities(String message) {
@@ -227,7 +218,8 @@ public class Referee extends AbstractReferee {
     }
 
     private void setNextPhase(Player activePlayer){
-        if(!activePlayer.canPlay(game)){
+        
+        if(!activePlayer.canPlay(game) || !activePlayer.isActive()){
             switchToNextPlayer(activePlayer);
         }
         else{
@@ -237,7 +229,7 @@ public class Referee extends AbstractReferee {
 
     private void switchToNextPlayer(Player player) {
 
-        if(player.hasToDraw() && game.getDrawCards().size() > 0){
+        if(player.isActive() && player.hasToDraw() && game.getDrawCards().size() > 0){
             Card drawedCard = player.drawCard(game);
             view.drawCard(player, drawedCard);
             gameSummaryManager.drawCard(player, game.getDrawCards().size());
@@ -245,10 +237,16 @@ public class Referee extends AbstractReferee {
 
         // move to next player
 
-        activePlayerId = (activePlayerId + 1) % gameManager.getPlayerCount();
-        gameManager.getPlayer(activePlayerId).update(game);
-        if(game.isLastTurn()) {
-            gameOverFrame = true;
+        if(gameManager.getActivePlayers().size() > 0){
+
+            activePlayerId = (activePlayerId + 1) % gameManager.getPlayerCount();
+
+            while(!gameManager.getPlayer(activePlayerId).isActive()){
+                activePlayerId = (activePlayerId + 1) % gameManager.getPlayerCount();
+            }
+
+            gameManager.getPlayer(activePlayerId).update(game);
+            gameOverFrame = game.isLastTurn();            
         }
     }    
 
@@ -287,59 +285,65 @@ public class Referee extends AbstractReferee {
          */
 
         if(checker.isWaitAction(command)){
-
+            
+            gameManager.setFrameDuration(500);
             player.setAction(new WaitAction());
             return null;
 
-        }else if(checker.isTakeAction(command)){
-
-            System.err.println("TakeAction detected with command = " + command);
-
-            TakeAction action = parseTakeAction(player, command);
-            player.setAction(action);
-            return action;
-        
-        }else if(checker.isAddAction(command)){
-
-            System.err.println("AddAction detected with command = " + command);
-
-            AddAction action = parseAddAction(player, command);
-            player.setAction(action);
-
-            System.err.println("isTake = " + player.getAction().isTake());
-
-            return action;
-        
-        }else if(checker.isPushAction(command)){
-
-            System.err.println("PushAction detected with command = " + command);
-
-            PushAction action = parsePushAction(player, command);            
-            player.setAction(action);
-            return action;
-
-        }else if(checker.isSplitAction(command)){
-
-            SplitAction action = parseSplitAction(player, command);
-            player.setAction(action);
-            return action;
-        
-        }else if(checker.isJoinAction(command)){
-
-            JoinAction action = parseJoinAction(player, command);
-            player.setAction(action);
-            return action;
-        
-        }else if(checker.isMoveAction(command)){
-
-            MoveAction action = parseMoveAction(player, command);
-            player.setAction(action);
-            return action;
-        
         }else{
 
-            throw new InvalidInputException("WAIT | TAKE | ADD | PUSH | SPLIT | JOIN | MOVE", command.split(" ")[0]);
-        }        
+            gameManager.setFrameDuration(500);
+
+            if(checker.isTakeAction(command)){
+
+                System.err.println("TakeAction detected with command = " + command);
+    
+                TakeAction action = parseTakeAction(player, command);
+                player.setAction(action);
+                return action;
+            
+            }else if(checker.isAddAction(command)){
+    
+                System.err.println("AddAction detected with command = " + command);
+    
+                AddAction action = parseAddAction(player, command);
+                player.setAction(action);
+    
+                System.err.println("isTake = " + player.getAction().isTake());
+    
+                return action;
+            
+            }else if(checker.isPushAction(command)){
+    
+                System.err.println("PushAction detected with command = " + command);
+    
+                PushAction action = parsePushAction(player, command);            
+                player.setAction(action);
+                return action;
+    
+            }else if(checker.isSplitAction(command)){
+    
+                SplitAction action = parseSplitAction(player, command);
+                player.setAction(action);
+                return action;
+            
+            }else if(checker.isJoinAction(command)){
+    
+                JoinAction action = parseJoinAction(player, command);
+                player.setAction(action);
+                return action;
+            
+            }else if(checker.isMoveAction(command)){
+    
+                MoveAction action = parseMoveAction(player, command);
+                player.setAction(action);
+                return action;
+            
+            }else{
+    
+                throw new InvalidInputException("WAIT | TAKE | ADD | PUSH | SPLIT | JOIN | MOVE", command.split(" ")[0]);
+            } 
+        }       
     }
 
     // ACTION PARSING

@@ -47,7 +47,7 @@ public class Player extends AbstractMultiplayerPlayer {
     public void init(){ // Testing constructor        
         this.cardsInHand = new Stack<String>();
         this.mustDraw = true;
-    }    
+    }
 
     public void update(Game game){
         this.mustDraw = true;
@@ -59,7 +59,7 @@ public class Player extends AbstractMultiplayerPlayer {
     }
 
     public String getInfos(){
-        
+
         String[] strCards = new String[this.cardsInHand.size()];
 
         for (int i = 0; i < strCards.length; i++) {
@@ -79,7 +79,7 @@ public class Player extends AbstractMultiplayerPlayer {
             addCardInHand(drawedCard);
             return drawedCard;
         }else{
-            gameSummaryManager.anyCardLeftInCommonDraw(this);
+            gameSummaryManager.addDrawEmpty(this);
             return null;
         }        
     }
@@ -129,7 +129,12 @@ public class Player extends AbstractMultiplayerPlayer {
     }
 
     public boolean canPlay(Game game){
-        return !this.action.isWait() && (this.remainingActions > 0 || this.canAdd(game) || this.canPush());
+        if(this.isActive()){
+            return !this.action.isWait() && (this.remainingActions > 0 || this.canAdd(game) || this.canPush());
+        }
+        else{
+            return false;
+        }        
     }
 
     public boolean canAdd(Game game){

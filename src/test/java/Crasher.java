@@ -7,7 +7,7 @@ import java.math.*;
  * the format you give the card number doesn't matter, but you must give the number before the color, and separate them by an underscore
  * you don't have to sort your cards or your stacks to send your outputs instructions
  **/
-class Waiter {
+class Crasher {
 
     public static void main(String args[]) {
         Scanner in = new Scanner(System.in);
@@ -29,18 +29,23 @@ class Waiter {
                 String stack = in.nextLine(); // a string containing the description of a stack : <stack_id> <stack_type> <card_1> <card_2> ...
             }
 
-            // Write an action using System.out.println()
-            // To debug: System.err.println("Debug messages...");
+            if(drawCardsCount <= 0){
+               crash_SOFT();
+            }
 
-
-            // WAIT
-            // TAKE <stackID> <cardCode>
-            // ADD <stackID> <cardCode>
-            // PUSH <cardCode1>, <cardCode2>...
-            // SPLIT <cardCode_1> <cardCode_2>
-            // JOIN <stackID_1> <stackID_2>
-            // MOVE <stackID_From> <stackID_To> <cardCodeFrom>
             System.out.println("WAIT");
         }
+    }
+
+    public static void crash_HARD(){
+        int o = 1;
+        while(true){
+            System.err.println("YOL" + new String(new char[o]).replace("\0", "O"));
+            o++;
+        } 
+    }
+
+    public static void crash_SOFT(){
+        int yolo = Integer.parseInt("YOLOOOOO");
     }
 }

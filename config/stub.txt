@@ -1,6 +1,6 @@
 gameloop
 read myPlayerIndex:int playersCount:int stacksCount:int drawCardsCount:int
-loop playersCount read nbCards:int actionsLeft:int cards:word(1100)
+loop playersCount read playerIndex:int cardsCount:int actionsLeft:int cards:word(1100)
 loop stacksCount read stack:string(1100)
 write WAIT
 
@@ -8,10 +8,11 @@ INPUT
 myPlayerIndex: the index of your player
 playersCount: the total amount of players
 stacksCount: the amount of stacks pushed in the game
+playerIndex: the index of the current player
 cards: a comma-sparated string containing all player i cards : <Card1>;<Card2>;... ex : "08_BLUE;01_GREEN;..."
 stack: a string containing the description of a stack : <stack_id> <stack_type> <card_1> <card_2> ...
 actionsLeft : the remaining actions of the player i
-nbCards: the amount of cards for player i
+cardsCount: the amount of cards for the current player
 drawCardsCount: the amount of cards left in the common draw
 
 STATEMENT
