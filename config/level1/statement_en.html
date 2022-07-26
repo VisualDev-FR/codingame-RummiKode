@@ -1,0 +1,211 @@
+<style>    
+  body
+  {
+      background-color: rgb(30,30,30);
+      color: rgba(245, 245, 245, 0.562);
+      font-size: 16;
+      margin-left: 40px;
+      margin-right: 80px;
+      margin-bottom: 200px;
+  }
+  </style>
+
+<!-- LEAGUE ALERT -->
+<div style="color: #7cc576;
+background-color: rgba(124, 197, 118,.1);
+padding: 20px;
+margin-right: 15px;
+margin-left: 15px;
+margin-bottom: 10px;
+text-align: left;"> 
+    <div style="text-align: center; margin-bottom: 6px">
+      <img src="//cdn.codingame.com/smash-the-code/statement/league_wood_04.png" />
+    </div>
+
+    <p style="text-align: center; font-weight: 700; margin-bottom: 6px;">
+      This is a <strong>league based</strong> challenge.
+    </p>
+
+    <div class="statement-league-alert-content">
+      For this challenge, multiple leagues for the same game are available. Once you have proven yourself against the
+            first Boss, you will access a higher league and extra rules will be available.<br> <br>
+      Starter AIs are available in the <a target="_blank" rel="nofollow noopener noreferrer"
+        href="https://github.com/VisualDev-FR/codingame-RummiKode/tree/main/starterAIs">Starter Kit</a>.
+        They can help you get started with your own bot.
+    </div>
+  </div>
+
+<div id="statement_back" class="statement_back" style="display:none"></div>
+<div class="statement-body">
+  
+  <!-- GOAL -->
+  <div class="statement-section statement-goal">
+    <h1>
+      <span class="icon icon-goal">&nbsp;</span>
+      <span>The Goal</span>
+    </h1>
+    <div class="statement-goal-content">
+      The goal is to throw all your cards by making differents types of stacks :
+      <br>
+      <ul>
+        <li><p>the color stacks : minimum of 3 cards with the same number and differrent colors.</p></li>
+        <li><p>the sequence stacks : minimum of 3 cards with the same colors and consecutive numbers.</p></li>
+      </ul>
+      <p>There is a total amount of 104 cards in the game with 4 differents colors (<strong>BLACK</strong>, <strong>BLUE</strong>, <strong>GREEN</strong>, <strong>YELLOW</strong>) 
+        and 13 numbers from <strong>0 to 12</strong>. Each card is present two times. 104 = 2 x (4 x 13)</p>      
+    </div>
+  </div>
+  <!-- RULES -->
+  <div class="statement-section statement-rules">
+    <h1>
+      <span class="icon icon-rules">&nbsp;</span>
+      <span>Rules</span>
+    </h1>
+    <div>
+      <div class="statement-rules-content">
+        Your program receives differents inputs representing the game state. Any possible action will be given to you.<br>
+        <br>
+        You have two ways to throw your cards :
+        <br>
+        <ul>
+          <li><p><action>PUSH</action> a new stack in the game, if the cards in your hand allow you to do it</p></li>
+          <li><p><action>ADD</action> a card in a stack wich has already been pushed in the game (you are not allowed to do that, before you pushed at least one stack)</p></li>
+        </ul>        
+        Once you have pushed at least one stack and if your player's <var>actionsLeft</var> is greater than zero, , you have the possibility to play one of those actions :
+        <ul>
+          <li><p><action>TAKE</action> a card in a stack, if the concerned stack still have at least 3 cards after taking it. This action may split a stack if the card 
+            is not on one of the two bounds. In this case, you have to ensure that the both stacks have at least 3 cards.</p></li>
+          <li><p><action>MOVE</action> a card from a stack to another. As the TAKE action, you have to ensure that the stack where the card is taken still contains
+             at least three cards after the move action, moreover you have to ensure that you're allowed to move the card in the destination stack.</p></li>
+          <li><p></p><action>SPLIT</action> a stack, for that you have to ensure that the both side of the stack counts at least 3 cards (note that you cannot split or join a color stack)</p></li>
+          <li><p></p><action>JOIN</action> two stacks, i they have consecutive numbers, it can allows you to take a card which couldn't be takable before</p></li>
+          <li><p></p><action>WAIT</action> for your next game turn, it can allow you to draw a card in the common draw if you did not throw any card during your game turn. But if you throwed at 
+            least one card during your game turn, you won't have the possibility to draw a card and you will only wait for your next game turn. Anyway, it can allow you to preserve
+             some cards in order to construct bigger stacks to push.</p></li>
+        </ul>
+        <h2>First turn specificities : </h2>
+        <ul>
+          <li><p>Each player must push a stack in the game, to have to possibility to play other actions. If you are not able to push a stack, your only possible action will be to WAIT.</p></li>
+          <li><p>The sum of the all the cards numbers pushed in the first stack must be greater or equal to 25.</p></li>
+        </ul>
+        <h2>Ranking system :</h2>
+        <ul>
+          <li><p>The first player having throw all his cards wins, and end the game.</p></li>
+          <li><p>Then, the ranking system works as follow :</p></li>
+            <ul>
+              <li><p>Your ranking depends of the amount of cards you have at the end of the game.</p></li>
+              <li><p>The less you will have cards in hand, the best will be your rank</p></li>
+              <li><p>If you have the same amount of cards than other players, the tie will be broken with the total amount of actions you played in the game</p></li>
+              <li><p>In this case, the players with the less amount of actions played will have a better rank. <Strong>Every</Strong> action are counted, 
+                exepted the <Strong>PUSH</Strong> and the <strong>ADD</strong>.</p></li>
+            </ul>          
+        </ul>
+        <h2>You <strong>lose</strong> if:</h2>
+        <ul>
+          <li>You do not supply a valid action / an action in due time.</li>
+          <li>You try to insert a card in a stack wich cannot contain this card.</li>
+          <li>You try to remove a card wich cannot be removed from the concerned stack.</li>
+          <li>You try to push an invalid stack (watch out to avoid to push two identical cards in the same stack)</li>
+          <li>You try to play an action with an actions left count equals to 0</li>
+        </ul>
+      </div>
+
+      <h2>Debugging tips</h2>
+      <ul>
+        <li><p>Hover over a player, or card stack to see extra information about it</p></li>
+        <li><p>Press the gear icon on the viewer to access extra display options</p></li>
+        <li><p>Use the keyboard to control the action: space to play/pause, arrows to step 1 frame at a time</p></li>
+      </ul>
+    </div>
+  </div>
+  <!-- EXPERT RULES -->
+  <div class="statement-section statement-expertrules">
+    <h1>
+      <span class="icon icon-expertrules">&nbsp;</span>
+      <span>Technical details</span>
+    </h1>
+    <div class="statement-expert-rules-content">
+      <ul>
+        <li><p>In the standard inputs, a card is always given by his number (two digits), an underscore and his color. ex : 08_BLUE</p></li>
+        <li><p>In the standard outputs, the two digits format for the card number is not mandatory and the string containing the color is not case sensitive, but you must give the number before the color, and separate them by an underscore.</p></li>
+        <li><p>When you PUSH a stack, the sorting of the specified cards doesn't matter.</p></li>
+        <li><p>All players start with 14 cards in their hand. The rest of the cards will be available in the common draw.</p></li>
+        <li><p>The type of the first pushed stack doesn't matter while the summ of all the cards number is greater or equal to 25</p></li>
+        <li><p>You can play <strong>5</strong> actions before pushing or adding. At each turn, your actions count will be reset to <strong>5</strong>, you cannot acummulate actions from a turn to another.</p></li>
+        <li><p>You'll be able to <Strong>PUSH</Strong> or <strong>ADD</strong> while your cards allow it to you.</p></li>
+        <li><p>If you don't throw any card during your game turn, you will have to draw one card in the common draw. If it is empty you will not draw any card.</p></li>
+        <li><p>The referee will never allows a stack to have less than 3 cards, by any exisiting way. You have to ensure that your actions don't generate any stack with less than 3 cards.</p></li>
+        <li><p>Due to the previous rule, the JOIN and SPLIT actions cannot be performed with a color stack.</p></li>
+        <li><p> Don't forget that all cards available in the game have a clone, and that the referee will never allow a stack to contain the same card twice.</p></li>
+        <li><p>The stacks IDs are automatically generated and always given in the standard inputs, you never have to give them.</p></li>
+        <li><p>If a player is disqualified, all his cards go back to the common draw and become available.</p></li>
+
+        <li><p></p></li>
+        <li><p>The source code of this game is available on this
+          <a rel="nofollow noopener noreferrer" target="_blank"  href="https://github.com/VisualDev-FR/codingame-RummiKode"> GitHub repo</a>.</p></li>
+      </ul>
+    </div>
+  </div>
+  <!-- EXAMPLES -->
+  <div class="statement-section statement-examples">
+    <h1>
+      <span class="icon icon-example">&nbsp;</span>
+      <span>Example</span>
+    </h1>
+
+    <div class="statement-examples-text">
+      A basic situation, an instruction, a result.
+    </div>
+
+  </div>
+
+  <!-- PROTOCOL -->
+  <div class="statement-section statement-protocol">
+    <h1>
+      <span class="icon icon-protocol">&nbsp;</span>
+      <span>Game Input</span>
+    </h1>
+
+    <!-- Protocol block -->
+    <div class="blk">
+      <div class="title">Input</div>
+      <div class="text">
+        <p><span class="statement-lineno">Line 1: </span><var>myPlayerIndex</var> : An integer containing the index of your player</p>
+        <p><span class="statement-lineno">Line 2: </span><var>playersCount</var> : An integer containing the total amount of active players</p>
+        <p><span class="statement-lineno">Line 3: </span><var>stacksCount</var> : An integer containing the amount of stacks pushed in the game</p>
+        <p><span class="statement-lineno">Line 4: </span><var>drawCardsCount</var> : An integer containing the amount of cards left in the common draw</p>
+        <p><span class="statement-lineno">3 Lines per player :</span></p> 
+          <ul>
+            <li><var>nbCards</var> : An integer containing the amount of cards for player i</p></li>
+            <li><var>actionsLeft</var> : An integer containing the remaining actions of the player i</p></li>
+            <li><var>cards</var> : a comma-sparated string containing all player i cards : ex : "08_BLUE;01_GREEN;..."</p></li>
+          </ul>
+        <p><span class="statement-lineno"><var>stacksCount</var> Next lines : </span><var>stack</var> : A space-separated string containing the description of a stack : 'stackID stackType card1 card2 ...</p>
+      </div>
+    </div>
+
+    <!-- Protocol block -->
+    <div class="blk">
+      <div class="title">Output</div>
+      <div class="text">
+        <p><span class="statement-lineno">A single line</span> containing the action to perform :</p>
+        <ul>
+          <li><p><action>WAIT</action> : the player will draw a card if he didn't throw any card and if there is cards left in the common draw.</p></li>
+          <li><p><action>PUSH</action> <var>card1</var> <var>card2</var> <var>card3</var> ... : the player will push a new stack in the game, containing all specified cards.</p></li>
+          <li><p><action>ADD</action> <var>stackID</var> <var>card</var> : the player will add the specified card to the stack.</p></li>
+          <li><p><action>TAKE</action> <var>stackID</var> <var>card</var> : the player will take a card from a pushed stack and add it to his personal draw.</p></li>
+          <li><p><action>MOVE</action> <var>stackFrom</var> <var>stackTo</var> <var>cardToTake</var> : the taken card will the removed from the first specified stack and added to the second specified stack.</p></li>
+          <li><p><action>SPLIT</action> <var>stackID</var> <var>card1</var> <var>card2</var> : the player will split a sequence stack between the two specified cards. These two cards 
+          must have a consecutive number, but sorting them is not mandatory.</p></li>
+          <li><p>JOIN <var>stackID_1</var> <var>stackID_2</var> : the two pushed stacks will be merged under the id the the first specified stack</p></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Protocol block -->
+    <div class="blk">
+      <div class="title">Constraints</div>
+        <br>Allotted response time to output
+        is ≤ <const>100</const> ms.</div>
+    </div>
+  </div>

@@ -24,6 +24,6 @@ WAIT
 TAKE <stackID> <cardCode>
 ADD <stackID> <cardCode>
 PUSH <cardCode1>, <cardCode2>...
-SPLIT <cardCode_1> <cardCode_2>
+SPLIT <stackID> <cardCode_1> <cardCode_2>
 JOIN <stackID_1> <stackID_2>
 MOVE <stackID_From> <stackID_To> <cardCodeFrom>
