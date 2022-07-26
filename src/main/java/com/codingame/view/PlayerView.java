@@ -111,7 +111,6 @@ public class PlayerView {
         .setFillColor(SCORE_COLOR)
         .setZIndex(View.Z_PLAYER);
 
-        //this.setScore(player.cardsCount());
         this.setScore(14);
     }
 
@@ -172,10 +171,30 @@ public class PlayerView {
         displayOnHoverModule.setDisplayHover(this.playerSprite, this.drawGroup);
     }
 
-    public void kill(DisplayOnHoverModule displayOnHoverModule){
+    public void kill(DisplayOnHoverModule displayOnHoverModule, GraphicEntityModule gem){
         scoreBar.setWidth(0);
         scoreMessage.setText("Disqualified...");
         displayOnHoverModule.untrack(this.playerSprite);
+
+        int crossWidth = 10;
+
+        gem.createLine()
+        .setLineWidth(crossWidth)
+        .setLineColor(SCORE_COLOR)
+        .setX(this.playerSprite.getX())
+        .setY(this.playerSprite.getY())
+        .setX2(this.playerSprite.getX() + View.AVATAR_SIZE)
+        .setY2(this.playerSprite.getY() + View.AVATAR_SIZE)
+        .setZIndex(View.Z_PLAYER + 1);
+
+        gem.createLine()
+        .setLineWidth(crossWidth)
+        .setLineColor(SCORE_COLOR)
+        .setX(this.playerSprite.getX() + View.AVATAR_SIZE)
+        .setY(this.playerSprite.getY())
+        .setX2(this.playerSprite.getX())
+        .setY2(this.playerSprite.getY() + View.AVATAR_SIZE)
+        .setZIndex(View.Z_PLAYER + 1);        
     }
 
     public void resetCardViews(){

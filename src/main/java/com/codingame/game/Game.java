@@ -47,7 +47,7 @@ public class Game {
     }
 
     public List<Player> getPlayers(){
-        return gameManager.getActivePlayers();
+        return gameManager.getPlayers();
     }
 
     public int playersCount(){

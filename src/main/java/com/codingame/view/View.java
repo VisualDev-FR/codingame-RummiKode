@@ -116,9 +116,7 @@ public class View {
             }
         }
         else{
-
             killPlayer(player);
-
         }        
 
         updateStacksToolTips();
@@ -130,7 +128,7 @@ public class View {
             cardView.hide();
         }
         this.draws.get(player.getIndex()).moveTo(this.draws.get(-1));
-        playerViews.get(player.getIndex()).kill(displayOnHoverModule);
+        playerViews.get(player.getIndex()).kill(displayOnHoverModule, gem);
     }
 
     private void updateScoreBar(Player player){

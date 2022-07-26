@@ -35,13 +35,14 @@ public class SkeletonMain {
         
         */
         gameRunner.addAgent(BasicIA.class, "BasicIA");
-        gameRunner.addAgent(Waiter.class, "Waiter");
-        gameRunner.addAgent(Crasher.class, "Crasher1");
-        gameRunner.addAgent(Crasher.class, "Crasher2");
+        gameRunner.addAgent(Crasher.class, "Crasher_1");
+        gameRunner.addAgent(Crasher.class, "Crasher_2");
+        gameRunner.addAgent(Crasher.class, "Crasher_3");
+
 
         //gameRunner.setSeed(4662452976557327007L); // 162 turns
         //gameRunner.setSeed(2762699414300471800L);
-        gameRunner.setSeed(3299701059001959868L);
+        //gameRunner.setSeed(3299701059001959868L);
 
         gameRunner.start();
 
