@@ -137,25 +137,9 @@ public class Referee extends AbstractReferee {
             scoreMap.get(cardCount).putIfAbsent(playsCount, new ArrayList<Integer>());
 
             scoreMap.get(cardCount).get(playsCount).add(playerIndex);
-        }   
-
-        for(int card : scoreMap.keySet()){
-
-            System.err.println("Card count = " + card);
-
-            for(int play : scoreMap.get(card).keySet()){
-
-                System.err.println("  Plays count = " + play);
-
-                for(int index : scoreMap.get(card).get(play)){
-
-                    System.err.println("    PLAYER INDEX = " + index);
-                }
-            }
         }
 
         int maxScore = 4;
-
         for(int cardCount : scoreMap.keySet()){
 
             for(int playsCount : scoreMap.get(cardCount).keySet()){
@@ -166,12 +150,16 @@ public class Referee extends AbstractReferee {
 
                     for(int playerIndex : playerList){
 
-                        if(players.get(playerIndex).isActive()){
+                        Player player = players.get(playerIndex);
+
+                        if(player.isActive()){
+                            player.setScore(maxScore);
                             scores[playerIndex] = maxScore;
                             scoreDescription[playerIndex] = String.format("%s cards left, %s plays", cardCount, playsCount);
                             // we dont decrease the score here, in order to give the same score to all playerList, we will decrease it at the end of the loop
                         }
                         else{
+                            player.setScore(-1);
                             scores[playerIndex] = -1;
                             scoreDescription[playerIndex] = "Disqualified";
                         }
@@ -182,7 +170,10 @@ public class Referee extends AbstractReferee {
 
                     int playerIndex = playerList.get(0);
 
-                    if(players.get(playerIndex).isActive()){
+                    Player player = players.get(playerIndex);
+
+                    if(player.isActive()){
+                        player.setScore(maxScore);
                         scores[playerIndex] = maxScore;
                         scoreDescription[playerIndex] = scoreMap.get(cardCount).size() > 1 ?
                             String.format("%s cards left, %s plays", cardCount, playsCount) :
@@ -191,6 +182,7 @@ public class Referee extends AbstractReferee {
                         maxScore--;
                     }
                     else{
+                        player.setScore(-1);
                         scores[playerIndex] = -1;
                         scoreDescription[playerIndex] = "Disqualified";
                     }

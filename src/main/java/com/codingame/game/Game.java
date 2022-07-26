@@ -218,11 +218,6 @@ public class Game {
             gameSummaryManager.wait(player);
             player.setLeftActions(0);
         }
-
-        player.setScore(player.cardsCount());
-
-        // update view
-        //view.endOfTurn(this);
     }    
 
     public void TAKE(Player player, TakeAction takeAction){
