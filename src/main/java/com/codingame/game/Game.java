@@ -73,12 +73,6 @@ public class Game {
             lines.add(Integer.toString(activePlayer.actionsLeft())); // actionsLeft
             lines.add(activePlayer.getInfos()); // cards of the player
         }
-        
-        /* for(int i = 0; i < gameManager.getPlayerCount(); i++){
-            lines.add(Integer.toString(gameManager.getPlayers().get(i).cardsCount())); // nbCards
-            lines.add(Integer.toString(gameManager.getPlayers().get(i).actionsLeft())); // actionsLeft
-            lines.add(gameManager.getPlayers().get(i).getInfos()); // cards of the player i        
-        } */
 
         for(int stackID : this.stacks.keySet()){
 
@@ -206,10 +200,7 @@ public class Game {
     // PLAYING FUNCTIONS
 
     public void performGameUpdate(Player player){
-
-        //view.startOfTurn();
-        //view.setPlayerMessage(player);        
-                 
+ 
         if (player.getAction().isMove()) {
             MOVE(player, (MoveAction) player.getAction());
             player.removeOnePlay();

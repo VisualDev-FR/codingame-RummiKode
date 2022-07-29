@@ -1,0 +1,29 @@
+# v2.0.0 
+
+major change :
+std inputs modification : add the player index in the player datas loop, in order to deactivate the inputs of disqualified players
+
+features :
+at player deactivation, return his cards to the common draw and update the playerView of disqualified player
+add variable frameDuration according to the active players count
+
+patch :
+fix the timeout detection fail with more than two players
+fix the ranking fail in online plays (done)
+fix the boss according to the stub modification
+fix the getPlayers() method in game.java (returned the activePlayerList)
+
+# v1.0.1 26-07-2022
+
+move DisplayOnHover.js in the good folder (done)
+fix the boss crashing during the online plays (done)
+fix the not displayed push at turn 0 (done)
+fix the displayOnHover bug with more than 25 cards (done)
+adjust the boardColumns to 25 wich correspond to the real amount of cards in the entire width of the screen (done)
+update the split description in the stubs (done)
+update the en statements
+
+
+# v1.0.0 25-07-2022
+
+1st release

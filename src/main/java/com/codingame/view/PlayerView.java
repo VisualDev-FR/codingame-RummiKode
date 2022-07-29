@@ -28,6 +28,7 @@ public class PlayerView {
 
     private final int MAX_SCORE_DISPLAY= 25;
     private final int SCORE_COLOR = 0xa80707;
+    private final int SCOREBAR_OFFSET = 10;
 
     public PlayerView(GraphicEntityModule gem, Player player, int playersCount, int xCoord, int yCoord, int width, int height){
 
@@ -88,19 +89,19 @@ public class PlayerView {
         // init the player score message
 
         scoreMessage = gem.createBitmapText()
-            .setFont("BRLNS_66")
-            .setFontSize(36)
-            .setText(player.cardsCount() + " cards")
-            .setMaxWidth(width - View.AVATAR_SIZE - textOffsetX * 2)
-            .setX(xCoord + View.AVATAR_SIZE / 2 + textOffsetX)
-            .setY(yCoord)
-            .setZIndex(View.Z_PLAYER);
+        .setFont("BRLNS_66")
+        .setFontSize(36)
+        .setText(player.cardsCount() + " cards")
+        .setMaxWidth(width - View.AVATAR_SIZE - textOffsetX * 2)
+        .setX(xCoord + View.AVATAR_SIZE / 2 + textOffsetX)
+        .setY(yCoord)
+        .setZIndex(View.Z_PLAYER);
 
         // init the score bar
 
         this.scoreBar = this.gem.createRoundedRectangle();
 
-        int scoreBarWidth = width - 5;
+        int scoreBarWidth = width - SCOREBAR_OFFSET;
         int scoreBarHeight = 20;
 
         scoreBar            
@@ -119,7 +120,7 @@ public class PlayerView {
     }
 
     public void setScore(int score){
-        int computeWidth = this.width * score / MAX_SCORE_DISPLAY;
+        int computeWidth = (this.width - SCOREBAR_OFFSET) * score / MAX_SCORE_DISPLAY;
         scoreBar.setWidth(Math.min(this.width, computeWidth));
         scoreMessage.setText(score + " cards");
     }

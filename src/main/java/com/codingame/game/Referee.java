@@ -286,7 +286,7 @@ public class Referee extends AbstractReferee {
 
         if(checker.isWaitAction(command)){
             
-            gameManager.setFrameDuration(500);
+            gameManager.setFrameDuration(1000 / gameManager.getActivePlayers().size()); // allow to always have 1 second between two changes of cardCount for the same player draw
             player.setAction(new WaitAction());
             return null;
 
