@@ -1,0 +1,5 @@
+sorry but i dont understand what you mean by "such a waste to have made it this far." ?
+
+I will take a look quiclkly to find out what is happening with yout python3 error
+
+Edit: if found out what happen, my 4 first inputs are given in 4 differents lines, i doesn't cause any problem in java because the stube uses int.next(), but in python (and probably in many other languages) it might cause an error.. i'm going to fix it quicly 

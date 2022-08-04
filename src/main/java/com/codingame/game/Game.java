@@ -62,10 +62,14 @@ public class Game {
         
         List<String> lines = new ArrayList<>();
 
-        lines.add(Integer.toString(player.getIndex())); // myPlayerIndex
-        lines.add(Integer.toString(gameManager.getActivePlayers().size())); // playersCount
-        lines.add(Integer.toString(stacks.size())); // stacksCount
-        lines.add(Integer.toString(drawCards.size())); // drawCardsCount 
+        String[] inputs = new String[4];
+
+        inputs[0] = Integer.toString(player.getIndex()); // myPlayerIndex
+        inputs[1] = Integer.toString(gameManager.getActivePlayers().size()); // playersCount
+        inputs[2] = Integer.toString(stacks.size()); // stacksCount
+        inputs[3] = Integer.toString(drawCards.size()); // drawCardsCount 
+
+        lines.add(String.join(" ", inputs)); 
 
         for(Player activePlayer : gameManager.getActivePlayers()){
             lines.add(Integer.toString(activePlayer.getIndex())); // playerIndex
