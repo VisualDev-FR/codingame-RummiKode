@@ -1,9 +1,7 @@
-# v2.0.0 
-
-major change :
-std inputs modification : add the player index in the player datas loop, in order to deactivate the inputs of disqualified players
+# v1.1.0 
 
 features :
+std inputs modification : add the player index in the player datas loop, in order to deactivate the inputs of disqualified players
 at player deactivation, return his cards to the common draw and update the playerView of disqualified player
 add variable frameDuration according to the active players count
 
@@ -23,7 +21,6 @@ fix the displayOnHover bug with more than 25 cards (done)
 adjust the boardColumns to 25 wich correspond to the real amount of cards in the entire width of the screen (done)
 update the split description in the stubs (done)
 update the en statements
-
 
 # v1.0.0 25-07-2022
 

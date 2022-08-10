@@ -1,4 +1,7 @@
 import java.util.*;
+import java.util.Map.Entry;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 class AdvancedIA {
 
@@ -17,16 +20,25 @@ class AdvancedIA {
     private static boolean pushedFirstSequence;
     private static Scanner in;
 
+    private static final boolean DO_PRINT_STACKS = false;
+    private static final boolean DO_PRINT_CARDS = true;
+
     public static void main(String args[]) throws Exception {
 
         in = new Scanner(System.in);
 
         List<String> playedActions = new ArrayList<String>();
         
-        while (true) {            
+        while (true){
             
             PARSE_PLAYERS(in);
             PARSE_STACKS(in);
+
+            Map<Integer, List<Card>> takableCards = getTakableCards();
+
+            for(Entry<Integer, List<Card>> entry : takableCards.entrySet()){
+                System.err.printf("(takable) %s %s\n", entry.getKey(), String.join(" ", entry.getValue().stream().map(Card::getCardCode).collect(Collectors.toList()).toArray(new String[0])));
+            }
 
             action = "WAIT";
             
@@ -76,15 +88,22 @@ class AdvancedIA {
             
             String[] stack = in.nextLine().split(" "); // <stack_id> <stack_type> <card_1> <card_2> ...
             
-            System.err.println(String.join(" ", stack));
+            //System.err.println(String.join(" ", stack));
 
             int stackID = Integer.parseInt(stack[0]);
             StackType stackType = StackType.values()[Integer.parseInt(stack[1])];
             List<Card> cards = new ArrayList<Card>();
 
-            for (int j = 2; j < stack.length; j++) {                    
-                cards.add(new Card(stack[j]));
+            if(DO_PRINT_STACKS) System.err.print(stackID + " ");
+
+            for (int j = 2; j < stack.length; j++) {  
+                Card card = new Card(stack[j]);                  
+                cards.add(card);
+
+                if(DO_PRINT_STACKS) System.err.print(card.getCardCode() + " ");
             }
+
+            if(DO_PRINT_STACKS) System.err.println("");
 
             game.createStack(stackID, stackType, cards);
         }        
@@ -117,6 +136,29 @@ class AdvancedIA {
         myPlayer = players.get(myPlayerIndex);
     }
 
+    // GAME FUNCTIONS
+
+    private static Map<Integer, List<Card>> getTakableCards(){
+
+        Map<Integer, List<Card>> takableCards = new HashMap<Integer, List<Card>>();
+
+        for(StackColor colorStack : game.colorStacks.values()){
+            List<Card> cards = colorStack.getTakableCards();
+            if(cards.size() > 0){
+                takableCards.put(colorStack.getID(), cards);
+            }
+        }
+
+        for(StackSequence stackSequence : game.sequenceStacks.values()){
+            List<Card> cards = stackSequence.getTakableCards();
+            if(cards.size() > 0){
+                takableCards.put(stackSequence.getID(), cards);
+            }        
+        }
+
+        return takableCards;
+    }
+    
     // GAME MODELLING
 
     private static class Config {
@@ -386,6 +428,10 @@ class AdvancedIA {
         public String toString(){
             return String.format("%s_%02d", this.color.toString(), this.number);
         }
+
+        public String getCardCode(){
+            return String.format("%S%s", this.color.toString().substring(0, 2), String.format("%02d", this.number));
+        }
     }
 
     private static class CardStack{
@@ -393,7 +439,6 @@ class AdvancedIA {
         protected int ID;
         protected TreeMap<String, Card> cards;
         protected StackType type;
-        protected int bonusCardCount;
     
         public int cardsSum(){
     
@@ -464,15 +509,15 @@ class AdvancedIA {
         }
     
         public List<Card> getTakableCards(){
-    
+
             List<Card> takableCards = new ArrayList<Card>();
     
             if(this.cardsCount() > 3){
-                takableCards.add(new ArrayList<Card>(this.cards.values()).get(0));
+                takableCards.add(this.cards.firstEntry().getValue());                
                 for(int i = 3; i < this.cardsCount() - 3; i++){
                     takableCards.add(new ArrayList<Card>(this.cards.values()).get(i));
-                }            
-                takableCards.add(new ArrayList<Card>(this.cards.values()).get(this.cardsCount() - 1));
+                }                            
+                takableCards.add(this.cards.lastEntry().getValue());
             }
     
             return takableCards;

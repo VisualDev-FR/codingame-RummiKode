@@ -5,5 +5,5 @@ end the game if any player can play
 add the minimum sum to begin game
 rendre les outputs des joueurs insensible à la casse
 vérifier que l'ordre des stacks dans le JOIN n'a pas de conséquence
-fix the draw bug at turn 1, see seed 3299701059001959868
 fix the scorebar offset bewteween two players
+fix the draw displaying bug 
