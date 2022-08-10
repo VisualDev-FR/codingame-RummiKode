@@ -12,6 +12,7 @@ fix the timeout detection fail with more than two players
 fix the ranking fail in online plays (done)
 fix the boss according to the stub modification
 fix the getPlayers() method in game.java (returned the activePlayerList)
+fix the inputs, merge them in one line to avoid crash in other languages
 
 # v1.0.1 26-07-2022
 

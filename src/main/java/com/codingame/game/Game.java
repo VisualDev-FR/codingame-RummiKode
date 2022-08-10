@@ -72,10 +72,15 @@ public class Game {
         lines.add(String.join(" ", inputs)); 
 
         for(Player activePlayer : gameManager.getActivePlayers()){
-            lines.add(Integer.toString(activePlayer.getIndex())); // playerIndex
-            lines.add(Integer.toString(activePlayer.cardsCount())); // nbCards
-            lines.add(Integer.toString(activePlayer.actionsLeft())); // actionsLeft
-            lines.add(activePlayer.getInfos()); // cards of the player
+
+            inputs = new String[4];
+
+            inputs[0] = Integer.toString(activePlayer.getIndex()); // playerIndex
+            inputs[1] = Integer.toString(activePlayer.cardsCount()); // nbCards
+            inputs[2] = Integer.toString(activePlayer.actionsLeft()); // actionsLeft
+            inputs[3] = activePlayer.getInfos(); // cards of the player
+
+            lines.add(String.join(" ", inputs));
         }
 
         for(int stackID : this.stacks.keySet()){
